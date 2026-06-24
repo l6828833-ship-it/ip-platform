@@ -84,8 +84,13 @@ export async function getAvailableCurrencies(): Promise<AvailableCurrency[]> {
   }
 
   const result: AvailableCurrency[] = [];
+  const hasCatalog = Object.keys(meta).length > 0;
   for (const t of enabled) {
     const m = meta[t.toLowerCase()];
+    // When we have the NowPayments catalog, only show coins we recognize
+    // (have proper name/network/logo). This hides orphan/deprecated tickers
+    // like BUSDMATIC, USDTALGO, etc. that render with no logo or network.
+    if (hasCatalog && !m) continue;
     // Skip coins explicitly disabled in NowPayments metadata
     if (m && m.enabled === false) continue;
     result.push({
