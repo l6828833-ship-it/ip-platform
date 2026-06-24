@@ -64,6 +64,27 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+
+    // Manually add (positive) or deduct (negative) activation points
+    adjustPoints: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        delta: z.number().int(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (input.delta === 0) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Amount cannot be zero" });
+        }
+        await db.adjustUserActivationPoints(input.userId, input.delta);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "adjust_activation_points",
+          entityType: "user",
+          entityId: input.userId,
+          details: { delta: input.delta },
+        });
+        return { success: true };
+      }),
     
     delete: adminProcedure
       .input(z.object({ userId: z.number() }))
@@ -118,6 +139,7 @@ export const appRouter = router({
         pricing: z.array(z.object({
           connections: z.number().min(1).max(10),
           price: z.string(),
+          points: z.number().min(0).default(0),
         })),
       }))
       .mutation(async ({ input, ctx }) => {
@@ -150,6 +172,7 @@ export const appRouter = router({
         pricing: z.array(z.object({
           connections: z.number().min(1).max(10),
           price: z.string(),
+          points: z.number().min(0).default(0),
         })).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
@@ -461,19 +484,24 @@ export const appRouter = router({
           entityId: input.orderId,
         });
         
-        // Grant the plan's activation points to the buyer
+        // Grant activation points to the buyer (per-connection if set, else per-plan)
         try {
           const order = await db.getOrderById(input.orderId);
           if (order) {
             const plan = await db.getPlanById(order.planId);
-            if (plan && plan.activationPoints > 0) {
-              await db.addUserActivationPoints(order.userId, plan.activationPoints);
+            const pricing = await db.getPlanPricing(order.planId);
+            const tier = pricing.find(p => p.connections === order.connections);
+            const pointsToGrant = (tier?.points ?? 0) > 0
+              ? tier!.points
+              : (plan?.activationPoints ?? 0);
+            if (pointsToGrant > 0) {
+              await db.addUserActivationPoints(order.userId, pointsToGrant);
               await db.createActivityLog({
                 userId: ctx.user.id,
                 action: "grant_activation_points",
                 entityType: "user",
                 entityId: order.userId,
-                details: { orderId: input.orderId, points: plan.activationPoints },
+                details: { orderId: input.orderId, connections: order.connections, points: pointsToGrant },
               });
             }
           }

@@ -30,7 +30,7 @@ type PlanFormData = {
   promoText: string;
   activationPoints: number;
   isActive: boolean;
-  pricing: { connections: number; price: string }[];
+  pricing: { connections: number; price: string; points: number }[];
 };
 
 const defaultPlanForm: PlanFormData = {
@@ -42,7 +42,7 @@ const defaultPlanForm: PlanFormData = {
   promoText: "",
   activationPoints: 0,
   isActive: true,
-  pricing: Array.from({ length: 10 }, (_, i) => ({ connections: i + 1, price: "" }))
+  pricing: Array.from({ length: 10 }, (_, i) => ({ connections: i + 1, price: "", points: 0 }))
 };
 
 export default function AdminPlans() {
@@ -102,7 +102,7 @@ export default function AdminPlans() {
       isActive: plan.isActive,
       pricing: Array.from({ length: 10 }, (_, i) => {
         const existing = plan.pricing?.find(p => p.connections === i + 1);
-        return { connections: i + 1, price: existing?.price || "" };
+        return { connections: i + 1, price: existing?.price || "", points: existing?.points ?? 0 };
       })
     });
   };
@@ -150,6 +150,13 @@ export default function AdminPlans() {
     setPlanForm(prev => ({
       ...prev,
       pricing: prev.pricing.map((p, i) => i === index ? { ...p, price } : p)
+    }));
+  };
+
+  const updatePricingPoints = (index: number, points: number) => {
+    setPlanForm(prev => ({
+      ...prev,
+      pricing: prev.pricing.map((p, i) => i === index ? { ...p, points } : p)
     }));
   };
   
@@ -342,7 +349,7 @@ export default function AdminPlans() {
               </div>
 
               <div className="space-y-2">
-                <Label>Activation Points Granted</Label>
+                <Label>Default Activation Points (fallback)</Label>
                 <Input
                   type="number"
                   min="0"
@@ -351,7 +358,7 @@ export default function AdminPlans() {
                   placeholder="0"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Activation points the user receives when this plan's order is verified
+                  Used only when a connection tier below has its points set to 0. Set per-connection points in the pricing grid.
                 </p>
               </div>
               
@@ -365,12 +372,12 @@ export default function AdminPlans() {
               
               {/* Pricing Grid */}
               <div className="space-y-3">
-                <Label>Pricing per Connection</Label>
+                <Label>Pricing &amp; Points per Connection</Label>
                 <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
                   {planForm.pricing.map((p, i) => (
-                    <div key={i} className="space-y-1">
+                    <div key={i} className="space-y-1 rounded-lg border p-2">
                       <Label className="text-xs text-muted-foreground">
-                        {p.connections} {p.connections === 1 ? "connection" : "connections"}
+                        {p.connections} {p.connections === 1 ? "conn." : "conns"}
                       </Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
@@ -383,11 +390,22 @@ export default function AdminPlans() {
                           className="pl-7"
                         />
                       </div>
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min="0"
+                          value={p.points}
+                          onChange={(e) => updatePricingPoints(i, parseInt(e.target.value) || 0)}
+                          placeholder="0"
+                          className="pr-9"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">pts</span>
+                      </div>
                     </div>
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Leave empty for connections you don't want to offer
+                  Set the price and the activation points granted for each connection count. Leave price empty for tiers you don't offer.
                 </p>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +20,8 @@ import {
   Shield,
   UserCog,
   Trash2,
-  User
+  User,
+  Coins
 } from "lucide-react";
 
 export default function AdminUsers() {
@@ -48,10 +50,25 @@ export default function AdminUsers() {
       toast.error(error.message || "Failed to delete user");
     }
   });
+
+  const adjustPoints = trpc.users.adjustPoints.useMutation({
+    onSuccess: () => {
+      utils.users.list.invalidate();
+      toast.success("Points updated");
+      setPointsUser(null);
+      setPointsAmount(0);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update points");
+    }
+  });
   
   const [searchQuery, setSearchQuery] = useState("");
   const [editingUser, setEditingUser] = useState<NonNullable<typeof users>[0] | null>(null);
   const [deletingUser, setDeletingUser] = useState<NonNullable<typeof users>[0] | null>(null);
+  const [pointsUser, setPointsUser] = useState<NonNullable<typeof users>[0] | null>(null);
+  const [pointsMode, setPointsMode] = useState<"add" | "deduct">("add");
+  const [pointsAmount, setPointsAmount] = useState(0);
   const [newRole, setNewRole] = useState<"user" | "admin" | "agent">("user");
   
   const filteredUsers = users?.filter(u => 
@@ -80,6 +97,15 @@ export default function AdminUsers() {
     if (deletingUser) {
       deleteUser.mutate({ userId: deletingUser.id });
     }
+  };
+
+  const handleAdjustPoints = () => {
+    if (!pointsUser || pointsAmount <= 0) {
+      toast.error("Enter an amount greater than zero");
+      return;
+    }
+    const delta = pointsMode === "add" ? pointsAmount : -pointsAmount;
+    adjustPoints.mutate({ userId: pointsUser.id, delta });
   };
   
   return (
@@ -165,6 +191,7 @@ export default function AdminUsers() {
                     <TableRow>
                       <TableHead>User</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Points</TableHead>
                       <TableHead>Joined</TableHead>
                       <TableHead>Last Active</TableHead>
                       <TableHead className="w-12"></TableHead>
@@ -187,6 +214,12 @@ export default function AdminUsers() {
                           </div>
                         </TableCell>
                         <TableCell>{getRoleBadge(user.role)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 font-medium">
+                            <Coins className="h-4 w-4 text-amber-500" />
+                            {user.activationPoints ?? 0}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-muted-foreground">
                           {format(new Date(user.createdAt), "MMM d, yyyy")}
                         </TableCell>
@@ -209,6 +242,16 @@ export default function AdminUsers() {
                               >
                                 <UserCog className="mr-2 h-4 w-4" />
                                 Change Role
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setPointsUser(user);
+                                  setPointsMode("add");
+                                  setPointsAmount(0);
+                                }}
+                              >
+                                <Coins className="mr-2 h-4 w-4" />
+                                Adjust Points
                               </DropdownMenuItem>
                               {user.id !== currentUser?.id && (
                                 <DropdownMenuItem 
@@ -256,6 +299,59 @@ export default function AdminUsers() {
               <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
               <Button onClick={handleUpdateRole} disabled={updateRole.isPending}>
                 {updateRole.isPending ? "Updating..." : "Update Role"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Adjust Points Dialog */}
+        <Dialog open={!!pointsUser} onOpenChange={() => { setPointsUser(null); setPointsAmount(0); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adjust Activation Points</DialogTitle>
+              <DialogDescription>
+                {pointsUser?.name || pointsUser?.email} currently has{" "}
+                <strong>{pointsUser?.activationPoints ?? 0}</strong> points
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Action</Label>
+                  <Select value={pointsMode} onValueChange={(v) => setPointsMode(v as "add" | "deduct")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="add">Add points</SelectItem>
+                      <SelectItem value="deduct">Deduct points</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Amount</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={pointsAmount}
+                    onChange={(e) => setPointsAmount(parseInt(e.target.value) || 0)}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              {pointsUser && pointsAmount > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  New balance:{" "}
+                  <strong>
+                    {Math.max((pointsUser.activationPoints ?? 0) + (pointsMode === "add" ? pointsAmount : -pointsAmount), 0)}
+                  </strong>
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setPointsUser(null); setPointsAmount(0); }}>Cancel</Button>
+              <Button onClick={handleAdjustPoints} disabled={adjustPoints.isPending}>
+                {adjustPoints.isPending ? "Saving..." : pointsMode === "add" ? "Add Points" : "Deduct Points"}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -178,7 +178,7 @@ export async function getAllPlans(activeOnly = false) {
 }
 
 // ============ PLAN PRICING QUERIES ============
-export async function setPlanPricing(planId: number, pricingData: { connections: number; price: string }[]) {
+export async function setPlanPricing(planId: number, pricingData: { connections: number; price: string; points?: number }[]) {
   const db = await getDb();
   if (!db) return;
   
@@ -192,6 +192,7 @@ export async function setPlanPricing(planId: number, pricingData: { connections:
         planId,
         connections: p.connections,
         price: p.price,
+        points: p.points ?? 0,
       }))
     );
   }
@@ -651,6 +652,15 @@ export async function deductUserActivationPoints(userId: number, amount: number)
   if (!db || amount === 0) return;
   await db.update(users)
     .set({ activationPoints: sql`GREATEST(${users.activationPoints} - ${amount}, 0)` })
+    .where(eq(users.id, userId));
+}
+
+// Admin manual adjustment: delta can be positive (add) or negative (deduct)
+export async function adjustUserActivationPoints(userId: number, delta: number) {
+  const db = await getDb();
+  if (!db || delta === 0) return;
+  await db.update(users)
+    .set({ activationPoints: sql`GREATEST(${users.activationPoints} + ${delta}, 0)` })
     .where(eq(users.id, userId));
 }
 
