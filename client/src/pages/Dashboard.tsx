@@ -49,10 +49,14 @@ export default function Dashboard() {
   const expiredCredentials = credentials?.filter(c => !c.isActive).length || 0;
   const activeCredentialsList = (credentials?.filter(c => c.isActive) || [])
     .slice()
-    .sort((a, b) => a.connectionNumber - b.connectionNumber);
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const expiredCredentialsList = (credentials?.filter(c => !c.isActive) || [])
     .slice()
-    .sort((a, b) => a.connectionNumber - b.connectionNumber);
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  // A connection counts as "new" (highlighted) for 24h after it's created
+  const isNewCredential = (c: NonNullable<typeof credentials>[0]) =>
+    Date.now() - new Date(c.createdAt).getTime() < 24 * 60 * 60 * 1000;
   
   const recentOrders = orders?.slice(0, 3) || [];
   
@@ -122,7 +126,7 @@ export default function Dashboard() {
     </div>
   );
 
-  const CredentialCard = ({ credential }: { credential: NonNullable<typeof credentials>[0] }) => {
+  const CredentialCard = ({ credential, displayNumber }: { credential: NonNullable<typeof credentials>[0]; displayNumber?: number }) => {
     const isExpired = credential.expiresAt && new Date(credential.expiresAt) < new Date();
     
     return (
@@ -134,7 +138,7 @@ export default function Dashboard() {
                 <Key className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-base">Connection {credential.connectionNumber}</CardTitle>
+                <CardTitle className="text-base">Connection {displayNumber ?? credential.connectionNumber}</CardTitle>
                 <CardDescription className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {credential.credentialType.toUpperCase()}
@@ -523,16 +527,28 @@ export default function Dashboard() {
                 ) : (
                   <Tabs defaultValue={String(activeCredentialsList[0]?.id)} className="w-full">
                     <TabsList className="flex flex-wrap h-auto justify-start gap-1">
-                      {activeCredentialsList.map(cred => (
-                        <TabsTrigger key={cred.id} value={String(cred.id)} className="gap-1">
-                          <Key className="h-3.5 w-3.5" />
-                          Connection {cred.connectionNumber}
-                        </TabsTrigger>
-                      ))}
+                      {activeCredentialsList.map((cred, idx) => {
+                        const isNew = isNewCredential(cred);
+                        return (
+                          <TabsTrigger
+                            key={cred.id}
+                            value={String(cred.id)}
+                            className={`gap-1.5 ${isNew ? "text-emerald-600 dark:text-emerald-400" : ""}`}
+                          >
+                            <Key className="h-3.5 w-3.5" />
+                            Connection {idx + 1}
+                            {isNew && (
+                              <span className="ml-1 inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[10px] font-semibold">
+                                New
+                              </span>
+                            )}
+                          </TabsTrigger>
+                        );
+                      })}
                     </TabsList>
-                    {activeCredentialsList.map(cred => (
+                    {activeCredentialsList.map((cred, idx) => (
                       <TabsContent key={cred.id} value={String(cred.id)} className="mt-4">
-                        <CredentialCard credential={cred} />
+                        <CredentialCard credential={cred} displayNumber={idx + 1} />
                       </TabsContent>
                     ))}
                   </Tabs>
@@ -549,16 +565,16 @@ export default function Dashboard() {
                 ) : (
                   <Tabs defaultValue={String(expiredCredentialsList[0]?.id)} className="w-full">
                     <TabsList className="flex flex-wrap h-auto justify-start gap-1">
-                      {expiredCredentialsList.map(cred => (
-                        <TabsTrigger key={cred.id} value={String(cred.id)} className="gap-1">
+                      {expiredCredentialsList.map((cred, idx) => (
+                        <TabsTrigger key={cred.id} value={String(cred.id)} className="gap-1.5">
                           <Key className="h-3.5 w-3.5" />
-                          Connection {cred.connectionNumber}
+                          Connection {idx + 1}
                         </TabsTrigger>
                       ))}
                     </TabsList>
-                    {expiredCredentialsList.map(cred => (
+                    {expiredCredentialsList.map((cred, idx) => (
                       <TabsContent key={cred.id} value={String(cred.id)} className="mt-4">
-                        <CredentialCard credential={cred} />
+                        <CredentialCard credential={cred} displayNumber={idx + 1} />
                       </TabsContent>
                     ))}
                   </Tabs>
