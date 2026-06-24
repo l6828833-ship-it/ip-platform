@@ -49,6 +49,55 @@ export async function getMerchantCoins(): Promise<string[]> {
   }
 }
 
+export type AvailableCurrency = {
+  ticker: string;
+  name: string;
+  network: string | null;
+  logoUrl: string | null;
+};
+
+/**
+ * Merchant-enabled coins enriched with display name, network and logo,
+ * for a nicer picker. Only returns coins that are enabled for the merchant.
+ */
+export async function getAvailableCurrencies(): Promise<AvailableCurrency[]> {
+  const enabled = await getMerchantCoins();
+  if (enabled.length === 0) return [];
+
+  const meta: Record<string, { name: string; network: string | null; logo: string | null; enabled: boolean }> = {};
+  try {
+    const res = await fetch(`${API_BASE}/full-currencies`, { headers: authHeaders() });
+    const data: any = await res.json();
+    const list = Array.isArray(data?.currencies) ? data.currencies : [];
+    for (const c of list) {
+      const code = String(c?.code ?? c?.ticker ?? "").toLowerCase();
+      if (!code) continue;
+      meta[code] = {
+        name: c?.name || code.toUpperCase(),
+        network: c?.network ? String(c.network).toUpperCase() : null,
+        logo: c?.logo_url ? `https://nowpayments.io${c.logo_url}` : null,
+        enabled: c?.enable !== false,
+      };
+    }
+  } catch (e: any) {
+    console.error("[NowPayments] full-currencies exception:", e?.message || e);
+  }
+
+  const result: AvailableCurrency[] = [];
+  for (const t of enabled) {
+    const m = meta[t.toLowerCase()];
+    // Skip coins explicitly disabled in NowPayments metadata
+    if (m && m.enabled === false) continue;
+    result.push({
+      ticker: t,
+      name: m?.name || t.toUpperCase(),
+      network: m?.network ?? null,
+      logoUrl: m?.logo ?? null,
+    });
+  }
+  return result;
+}
+
 export type CreatedPayment = {
   paymentId: string;
   payAddress: string;

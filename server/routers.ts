@@ -9,7 +9,7 @@ import { sendOrderConfirmationEmail, sendCredentialsEmail, sendPaymentVerificati
 import { runEmailDiagnostic } from "./emailDiagnostic";
 import {
   isNowPaymentsConfigured,
-  getMerchantCoins,
+  getAvailableCurrencies,
   createPayment as npCreatePayment,
   syncOrderPaymentStatus,
 } from "./nowpayments";
@@ -1173,9 +1173,9 @@ export const appRouter = router({
       return { enabled: isNowPaymentsConfigured() };
     }),
 
-    // Coins the merchant has enabled
+    // Coins the merchant has enabled (with name, network and logo)
     currencies: publicProcedure.query(async () => {
-      return getMerchantCoins();
+      return getAvailableCurrencies();
     }),
 
     // Create a crypto payment for an existing pending order and return pay details

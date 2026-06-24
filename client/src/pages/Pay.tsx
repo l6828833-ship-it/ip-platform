@@ -1,12 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { trpc } from "@/lib/trpc";
 import { useRoute, Link } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Copy, CheckCircle, Clock, Bitcoin } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, CheckCircle, Clock, Bitcoin, Check, ChevronsUpDown } from "lucide-react";
 
 type CreatedPayment = {
   paymentId: string;
@@ -17,6 +18,8 @@ type CreatedPayment = {
   network: string | null;
   paymentStatus: string;
 };
+
+type AvailableCurrency = { ticker: string; name: string; network: string | null; logoUrl: string | null };
 
 export default function Pay() {
   const [, params] = useRoute("/pay/:orderId");
@@ -34,6 +37,7 @@ export default function Pay() {
 
   const [payCurrency, setPayCurrency] = useState<string>("");
   const [payment, setPayment] = useState<CreatedPayment | null>(null);
+  const [coinPickerOpen, setCoinPickerOpen] = useState(false);
 
   // Poll payment status once a payment has been generated
   const { data: status } = trpc.nowpayments.status.useQuery(
@@ -42,6 +46,9 @@ export default function Pay() {
   );
 
   const isPaid = !!status?.paid || !!order?.paymentConfirmedAt;
+
+  const coinList = (currencies || []) as AvailableCurrency[];
+  const selectedCoin = coinList.find((c) => c.ticker === payCurrency);
 
   const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -122,18 +129,68 @@ export default function Pay() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Coin / Network</Label>
-                <Select value={payCurrency} onValueChange={setPayCurrency}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a coin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(currencies || []).map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c.toUpperCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={coinPickerOpen} onOpenChange={setCoinPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={coinPickerOpen}
+                      className="w-full justify-between font-normal h-11"
+                    >
+                      {selectedCoin ? (
+                        <span className="flex items-center gap-2 truncate">
+                          {selectedCoin.logoUrl && (
+                            <img src={selectedCoin.logoUrl} alt="" className="h-5 w-5 rounded-full" />
+                          )}
+                          <span className="truncate">{selectedCoin.name}</span>
+                          {selectedCoin.network && (
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                              {selectedCoin.network}
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Choose a coin</span>
+                      )}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search coin or network..." />
+                      <CommandList>
+                        <CommandEmpty>No coin found.</CommandEmpty>
+                        {coinList.map((c) => (
+                          <CommandItem
+                            key={c.ticker}
+                            value={`${c.name} ${c.network ?? ""} ${c.ticker}`}
+                            onSelect={() => {
+                              setPayCurrency(c.ticker);
+                              setCoinPickerOpen(false);
+                            }}
+                            className="gap-2"
+                          >
+                            <Check
+                              className={`h-4 w-4 ${payCurrency === c.ticker ? "opacity-100" : "opacity-0"}`}
+                            />
+                            {c.logoUrl ? (
+                              <img src={c.logoUrl} alt="" className="h-5 w-5 rounded-full" />
+                            ) : (
+                              <span className="h-5 w-5 rounded-full bg-muted inline-block" />
+                            )}
+                            <span className="flex-1 truncate">{c.name}</span>
+                            {c.network && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                {c.network}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">{c.ticker.toUpperCase()}</span>
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 {(!currencies || currencies.length === 0) && (
                   <p className="text-xs text-muted-foreground">
                     No coins available. Crypto payments may not be configured yet.
