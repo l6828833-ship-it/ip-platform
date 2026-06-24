@@ -49,6 +49,36 @@ export async function getMerchantCoins(): Promise<string[]> {
   }
 }
 
+export type AvailableCurrency = { ticker: string; name: string; network: string | null };
+
+/** Merchant-enabled coins enriched with display name + network (for the picker). */
+export async function getAvailableCurrencies(): Promise<AvailableCurrency[]> {
+  const enabled = await getMerchantCoins();
+  if (enabled.length === 0) return [];
+
+  const meta: Record<string, { name: string; network: string | null }> = {};
+  try {
+    const res = await fetch(`${API_BASE}/full-currencies`, { headers: authHeaders() });
+    const data: any = await res.json();
+    const list = Array.isArray(data?.currencies) ? data.currencies : [];
+    for (const c of list) {
+      const code = String(c?.code ?? c?.ticker ?? "").toLowerCase();
+      if (!code) continue;
+      meta[code] = {
+        name: c?.name || code.toUpperCase(),
+        network: c?.network ? String(c.network).toUpperCase() : null,
+      };
+    }
+  } catch (e: any) {
+    console.error("[NowPayments] full-currencies exception:", e?.message || e);
+  }
+
+  return enabled.map((t) => {
+    const m = meta[t.toLowerCase()];
+    return { ticker: t, name: m?.name || t.toUpperCase(), network: m?.network ?? null };
+  });
+}
+
 export type CreatedPayment = {
   paymentId: string;
   payAddress: string;
