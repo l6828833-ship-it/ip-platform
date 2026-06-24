@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { 
-  Tv, 
   Moon,
   Sun,
   LogIn,
@@ -22,10 +21,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <div className="container flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg gradient-primary">
-              <Tv className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-semibold text-lg hidden sm:inline">IPTV Premium</span>
+            <img
+              src="https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png"
+              alt="IPTV TOP"
+              className="h-9 w-auto"
+            />
           </Link>
           
           {/* Navigation */}
