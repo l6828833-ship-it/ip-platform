@@ -13,12 +13,21 @@ import {
   Globe,
   Clock,
   Users,
-  Coins
+  Coins,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 export default function Plans() {
   const { data: plans, isLoading } = trpc.plans.list.useQuery({ activeOnly: true });
   const [selectedConnections, setSelectedConnections] = useState<Record<number, number>>({});
+  const [expandedPlans, setExpandedPlans] = useState<Record<number, boolean>>({});
+
+  const FEATURES_PREVIEW_COUNT = 6;
+
+  const toggleExpanded = (planId: number) => {
+    setExpandedPlans(prev => ({ ...prev, [planId]: !prev[planId] }));
+  };
   
   const getPrice = (plan: NonNullable<typeof plans>[0], connections: number) => {
     const pricing = plan.pricing?.find(p => p.connections === connections);
@@ -50,8 +59,8 @@ export default function Plans() {
             <h1 className="text-2xl font-bold">Subscription Plans</h1>
             <p className="text-muted-foreground">Choose the perfect plan for your needs</p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map(i => (
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map(i => (
               <div key={i} className="skeleton h-96 rounded-xl" />
             ))}
           </div>
@@ -112,7 +121,7 @@ export default function Plans() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan, index) => {
               const connections = getConnections(plan.id, plan.maxConnections);
               const price = getPrice(plan, connections);
@@ -168,12 +177,41 @@ export default function Plans() {
                     
                     {/* Features */}
                     <div className="space-y-2">
-                      {(plan.features as string[] || []).map((feature, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
+                      {(() => {
+                        const allFeatures = (plan.features as string[]) || [];
+                        const isExpanded = expandedPlans[plan.id];
+                        const visibleFeatures = isExpanded
+                          ? allFeatures
+                          : allFeatures.slice(0, FEATURES_PREVIEW_COUNT);
+                        const hiddenCount = allFeatures.length - FEATURES_PREVIEW_COUNT;
+                        return (
+                          <>
+                            {visibleFeatures.map((feature, i) => (
+                              <div key={i} className="flex items-center gap-2 text-sm">
+                                <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                                <span>{feature}</span>
+                              </div>
+                            ))}
+                            {hiddenCount > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => toggleExpanded(plan.id)}
+                                className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    Show less <ChevronUp className="h-4 w-4" />
+                                  </>
+                                ) : (
+                                  <>
+                                    Show all features ({hiddenCount} more) <ChevronDown className="h-4 w-4" />
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
                       <div className="flex items-center gap-2 text-sm">
                         <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                         <span>{connections} simultaneous {connections === 1 ? "device" : "devices"}</span>
