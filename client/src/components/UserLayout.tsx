@@ -24,7 +24,6 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
 import {
-  Tv,
   LayoutDashboard,
   Package,
   ShoppingCart,
@@ -146,12 +145,11 @@ function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps
               </button>
               {!isCollapsed && (
                 <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg gradient-primary shrink-0">
-                    <Tv className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="font-semibold tracking-tight truncate">
-                    IPTV Premium
-                  </span>
+                  <img
+                    src="https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png"
+                    alt="IPTV TOP"
+                    className="h-7 w-auto"
+                  />
                 </Link>
               )}
             </div>
@@ -267,11 +265,13 @@ function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-7 h-7 rounded-lg gradient-primary">
-                  <Tv className="h-4 w-4 text-white" />
-                </div>
+                <img
+                  src="https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png"
+                  alt="IPTV TOP"
+                  className="h-6 w-auto"
+                />
                 <span className="tracking-tight text-foreground">
-                  {activeMenuItem?.label ?? "IPTV Premium"}
+                  {activeMenuItem?.label ?? ""}
                 </span>
               </div>
             </div>
