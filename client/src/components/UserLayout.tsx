@@ -35,6 +35,7 @@ import {
   Sun,
   Shield,
   PanelLeft,
+  AppWindow,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -42,6 +43,7 @@ import { Link, useLocation } from "wouter";
 const userMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Package, label: "Plans", path: "/plans" },
+  { icon: AppWindow, label: "Activation Apps", path: "/apps" },
   { icon: ShoppingCart, label: "My Orders", path: "/orders" },
   { icon: MessageCircle, label: "Support Chat", path: "/chat" },
 ];

@@ -24,15 +24,25 @@ import {
   Lock,
   Link as LinkIcon,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Coins,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const utils = trpc.useUtils();
   const { data: orders, isLoading: ordersLoading } = trpc.orders.myOrders.useQuery();
   const { data: credentials, isLoading: credentialsLoading } = trpc.credentials.myCredentials.useQuery();
   const { data: plans } = trpc.plans.list.useQuery({ activeOnly: true });
+  const { data: pointsData } = trpc.activations.myPoints.useQuery();
+  const { data: messages } = trpc.dashboardMessages.forMe.useQuery();
+  const dismissMessage = trpc.dashboardMessages.dismiss.useMutation({
+    onSuccess: () => utils.dashboardMessages.forMe.invalidate(),
+  });
+
+  const activationPoints = pointsData?.points ?? 0;
   
   const pendingOrders = orders?.filter(o => o.status === "pending").length || 0;
   const verifiedOrders = orders?.filter(o => o.status === "verified").length || 0;
@@ -281,8 +291,57 @@ export default function Dashboard() {
 
         </div>
         
+        {/* Dashboard Messages */}
+        {messages && messages.length > 0 && (
+          <div className="space-y-3">
+            {messages.map((m) => {
+              const styles: Record<string, string> = {
+                info: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+                success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                warning: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                error: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+              };
+              return (
+                <div
+                  key={m.id}
+                  className={`relative rounded-lg border px-4 py-3 ${styles[m.style] || styles.info}`}
+                >
+                  {m.title && <div className="font-semibold mb-1">{m.title}</div>}
+                  <div className="text-sm whitespace-pre-line pr-6">{m.body}</div>
+                  {m.isDismissible && (
+                    <button
+                      onClick={() => dismissMessage.mutate({ messageId: m.id })}
+                      className="absolute top-2 right-2 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
+                      aria-label="Dismiss"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Stats Cards - Important Stats Only */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Card className="card-hover">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Activation Points
+              </CardTitle>
+              <Coins className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{activationPoints}</div>
+              <Link href="/apps">
+                <span className="text-xs text-primary hover:underline cursor-pointer mt-1 inline-block">
+                  Activate apps
+                </span>
+              </Link>
+            </CardContent>
+          </Card>
+
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

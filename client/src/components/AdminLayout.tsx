@@ -40,7 +40,10 @@ import {
   Moon,
   Sun,
   ArrowLeft,
-  Shield
+  Shield,
+  AppWindow,
+  Zap,
+  MessageSquare
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -54,6 +57,9 @@ const adminMenuItems = [
   { icon: CreditCard, label: "Payment Methods", path: "/admin/payment-methods" },
   { icon: ShoppingCart, label: "Orders", path: "/admin/orders" },
   { icon: Key, label: "Credentials", path: "/admin/credentials" },
+  { icon: AppWindow, label: "Apps", path: "/admin/apps" },
+  { icon: Zap, label: "Activations", path: "/admin/activations" },
+  { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
   { icon: MessageCircle, label: "Chat", path: "/admin/chat" },
   { icon: FileText, label: "Activity Logs", path: "/admin/logs" },
   { icon: Mail, label: "Email Templates", path: "/admin/email-templates" },

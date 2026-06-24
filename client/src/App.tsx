@@ -31,6 +31,10 @@ import AdminLogs from "./pages/admin/AdminLogs";
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 import AdminCredentials from "./pages/admin/AdminCredentials";
 import AdminEmailSettings from "./pages/admin/AdminEmailSettings";
+import AdminApps from "./pages/admin/AdminApps";
+import AdminActivations from "./pages/admin/AdminActivations";
+import AdminMessages from "./pages/admin/AdminMessages";
+import Apps from "./pages/Apps";
 
 // Protected route wrapper
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -122,6 +126,9 @@ function Router() {
       <Route path="/chat">
         {() => <ProtectedRoute component={Chat} />}
       </Route>
+      <Route path="/apps">
+        {() => <ProtectedRoute component={Apps} />}
+      </Route>
       <Route path="/profile">
         {() => <ProtectedRoute component={Profile} />}
       </Route>
@@ -147,6 +154,15 @@ function Router() {
       </Route>
       <Route path="/admin/credentials">
         {() => <AdminRoute component={AdminCredentials} />}
+      </Route>
+      <Route path="/admin/apps">
+        {() => <AdminRoute component={AdminApps} />}
+      </Route>
+      <Route path="/admin/activations">
+        {() => <AdminRoute component={AdminActivations} />}
+      </Route>
+      <Route path="/admin/messages">
+        {() => <AdminRoute component={AdminMessages} />}
       </Route>
       <Route path="/admin/chat">
         {() => <AdminRoute component={AdminChat} />}

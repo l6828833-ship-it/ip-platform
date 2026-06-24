@@ -114,6 +114,7 @@ export const appRouter = router({
         isActive: z.boolean().default(true),
         features: z.array(z.string()).optional(),
         promoText: z.string().optional().nullable(),
+        activationPoints: z.number().min(0).default(0),
         pricing: z.array(z.object({
           connections: z.number().min(1).max(10),
           price: z.string(),
@@ -145,6 +146,7 @@ export const appRouter = router({
         isActive: z.boolean().optional(),
         features: z.array(z.string()).optional(),
         promoText: z.string().optional().nullable(),
+        activationPoints: z.number().min(0).optional(),
         pricing: z.array(z.object({
           connections: z.number().min(1).max(10),
           price: z.string(),
@@ -458,6 +460,26 @@ export const appRouter = router({
           entityType: "order",
           entityId: input.orderId,
         });
+        
+        // Grant the plan's activation points to the buyer
+        try {
+          const order = await db.getOrderById(input.orderId);
+          if (order) {
+            const plan = await db.getPlanById(order.planId);
+            if (plan && plan.activationPoints > 0) {
+              await db.addUserActivationPoints(order.userId, plan.activationPoints);
+              await db.createActivityLog({
+                userId: ctx.user.id,
+                action: "grant_activation_points",
+                entityType: "user",
+                entityId: order.userId,
+                details: { orderId: input.orderId, points: plan.activationPoints },
+              });
+            }
+          }
+        } catch (pointsError) {
+          console.error("Failed to grant activation points:", pointsError);
+        }
         
         // Send payment verification email
         try {
@@ -835,6 +857,279 @@ export const appRouter = router({
     stats: adminProcedure.query(async () => {
       return db.getDashboardStats();
     }),
+  }),
+
+  // ============ ACTIVATION APPS ============
+  apps: router({
+    // Active apps for users
+    list: publicProcedure.query(async () => {
+      return db.getAllApps(true);
+    }),
+
+    // All apps for admin management
+    adminList: adminProcedure.query(async () => {
+      return db.getAllApps(false);
+    }),
+
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getAppById(input.id);
+      }),
+
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        iconUrl: z.string().optional().nullable(),
+        description: z.string().optional().nullable(),
+        instructions: z.string().optional().nullable(),
+        instructionsLink: z.string().optional().nullable(),
+        pointsCost: z.number().min(0).default(1),
+        fields: z.array(z.object({
+          key: z.string().min(1),
+          label: z.string().min(1),
+          type: z.enum(["text", "mac", "email", "number"]).default("text"),
+          required: z.boolean().default(true),
+          placeholder: z.string().optional(),
+        })).default([]),
+        isActive: z.boolean().default(true),
+        sortOrder: z.number().default(0),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createApp(input);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "create_app",
+          entityType: "app",
+          entityId: id || undefined,
+          details: { title: input.title },
+        });
+        return { success: true, id };
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).optional(),
+        iconUrl: z.string().optional().nullable(),
+        description: z.string().optional().nullable(),
+        instructions: z.string().optional().nullable(),
+        instructionsLink: z.string().optional().nullable(),
+        pointsCost: z.number().min(0).optional(),
+        fields: z.array(z.object({
+          key: z.string().min(1),
+          label: z.string().min(1),
+          type: z.enum(["text", "mac", "email", "number"]).default("text"),
+          required: z.boolean().default(true),
+          placeholder: z.string().optional(),
+        })).optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...data } = input;
+        await db.updateApp(id, data);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "update_app",
+          entityType: "app",
+          entityId: id,
+        });
+        return { success: true };
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.deleteApp(input.id);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "delete_app",
+          entityType: "app",
+          entityId: input.id,
+        });
+        return { success: true };
+      }),
+  }),
+
+  // ============ ACTIVATIONS ============
+  activations: router({
+    // Current user's points balance
+    myPoints: protectedProcedure.query(async ({ ctx }) => {
+      const user = await db.getUserById(ctx.user.id);
+      return { points: user?.activationPoints ?? 0 };
+    }),
+
+    // Current user's activation history
+    mySubmissions: protectedProcedure.query(async ({ ctx }) => {
+      return db.getActivationRequestsByUserId(ctx.user.id);
+    }),
+
+    // Submit an activation: validates points, deducts, creates a pending request
+    submit: protectedProcedure
+      .input(z.object({
+        appId: z.number(),
+        formData: z.record(z.string(), z.string()).default({}),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const app = await db.getAppById(input.appId);
+        if (!app || !app.isActive) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "App not found" });
+        }
+
+        // Validate required fields
+        const fields = (app.fields ?? []) as { key: string; label: string; required: boolean }[];
+        for (const field of fields) {
+          if (field.required && !input.formData[field.key]?.trim()) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: `${field.label} is required` });
+          }
+        }
+
+        // Check points balance - block if insufficient (no extra messaging)
+        const user = await db.getUserById(ctx.user.id);
+        const balance = user?.activationPoints ?? 0;
+        if (balance < app.pointsCost) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "INSUFFICIENT_POINTS" });
+        }
+
+        // Deduct points and create the pending request
+        await db.deductUserActivationPoints(ctx.user.id, app.pointsCost);
+        const id = await db.createActivationRequest({
+          userId: ctx.user.id,
+          appId: app.id,
+          appTitle: app.title,
+          formData: input.formData,
+          pointsSpent: app.pointsCost,
+          status: "pending",
+        });
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "submit_activation",
+          entityType: "activation_request",
+          entityId: id || undefined,
+          details: { appId: app.id, pointsSpent: app.pointsCost },
+        });
+        return { success: true, id };
+      }),
+
+    // Admin: list activation requests (optionally filtered by status)
+    adminList: staffProcedure
+      .input(z.object({ status: z.enum(["pending", "activated", "rejected"]).optional() }).optional())
+      .query(async ({ input }) => {
+        return db.getAllActivationRequests(input?.status);
+      }),
+
+    // Admin: process a request (activate or reject). Rejecting refunds the points.
+    process: staffProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["activated", "rejected"]),
+        adminNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const request = await db.getActivationRequestById(input.id);
+        if (!request) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Request not found" });
+        }
+        if (request.status !== "pending") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Request already processed" });
+        }
+
+        await db.updateActivationRequest(input.id, {
+          status: input.status,
+          adminNotes: input.adminNotes,
+          processedBy: ctx.user.id,
+          processedAt: new Date(),
+        });
+
+        // Refund points if rejected
+        if (input.status === "rejected" && request.pointsSpent > 0) {
+          await db.addUserActivationPoints(request.userId, request.pointsSpent);
+        }
+
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "process_activation",
+          entityType: "activation_request",
+          entityId: input.id,
+          details: { status: input.status },
+        });
+        return { success: true };
+      }),
+  }),
+
+  // ============ DASHBOARD MESSAGES ============
+  dashboardMessages: router({
+    // Messages visible to the current user (global + targeted, minus dismissed)
+    forMe: protectedProcedure.query(async ({ ctx }) => {
+      return db.getDashboardMessagesForUser(ctx.user.id);
+    }),
+
+    dismiss: protectedProcedure
+      .input(z.object({ messageId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.dismissDashboardMessage(input.messageId, ctx.user.id);
+        return { success: true };
+      }),
+
+    adminList: adminProcedure.query(async () => {
+      return db.getAllDashboardMessages();
+    }),
+
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().optional().nullable(),
+        body: z.string().min(1),
+        style: z.enum(["info", "success", "warning", "error"]).default("info"),
+        userId: z.number().optional().nullable(),
+        isDismissible: z.boolean().default(true),
+        isActive: z.boolean().default(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const id = await db.createDashboardMessage(input);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "create_dashboard_message",
+          entityType: "dashboard_message",
+          entityId: id || undefined,
+        });
+        return { success: true, id };
+      }),
+
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional().nullable(),
+        body: z.string().min(1).optional(),
+        style: z.enum(["info", "success", "warning", "error"]).optional(),
+        userId: z.number().optional().nullable(),
+        isDismissible: z.boolean().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...data } = input;
+        await db.updateDashboardMessage(id, data);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "update_dashboard_message",
+          entityType: "dashboard_message",
+          entityId: id,
+        });
+        return { success: true };
+      }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.deleteDashboardMessage(input.id);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "delete_dashboard_message",
+          entityType: "dashboard_message",
+          entityId: input.id,
+        });
+        return { success: true };
+      }),
   }),
 
   // ============ EMAIL DIAGNOSTICS ============
