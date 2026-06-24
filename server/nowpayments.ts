@@ -64,10 +64,9 @@ export async function createPayment(params: {
   amount: string | number;
   payCurrency: string;
   description?: string;
-}): Promise<CreatedPayment | null> {
+}): Promise<CreatedPayment> {
   if (!isNowPaymentsConfigured()) {
-    console.error("[NowPayments] Not configured (missing NOWPAYMENTS_API_KEY)");
-    return null;
+    throw new Error("Crypto payments are not configured");
   }
 
   const baseUrl = (ENV.appUrl || "").replace(/\/$/, "");
@@ -81,30 +80,30 @@ export async function createPayment(params: {
     is_fixed_rate: true,
   };
 
-  try {
-    const res = await fetch(`${API_BASE}/payment`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify(payload),
-    });
-    const data: any = await res.json();
-    if (!res.ok || !data?.payment_id || !data?.pay_address) {
-      console.error("[NowPayments] create payment failed:", res.status, JSON.stringify(data));
-      return null;
-    }
-    return {
-      paymentId: String(data.payment_id),
-      payAddress: data.pay_address,
-      payAmount: Number(data.pay_amount),
-      payCurrency: data.pay_currency,
-      payinExtraId: data.payin_extra_id ?? null,
-      network: data.network ?? null,
-      paymentStatus: data.payment_status,
-    };
-  } catch (e: any) {
-    console.error("[NowPayments] create payment exception:", e?.message || e);
-    return null;
+  const res = await fetch(`${API_BASE}/payment`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data: any = await res.json().catch(() => ({}));
+  if (!res.ok || !data?.payment_id || !data?.pay_address) {
+    console.error("[NowPayments] create payment failed:", res.status, JSON.stringify(data));
+    const raw = data?.message || `NowPayments error (${res.status})`;
+    // Friendlier message for the common minimum-amount error
+    const msg = /too small/i.test(String(raw))
+      ? "This coin's minimum payment is higher than the order amount. Please choose another coin (e.g. USDT TRC20)."
+      : raw;
+    throw new Error(msg);
   }
+  return {
+    paymentId: String(data.payment_id),
+    payAddress: data.pay_address,
+    payAmount: Number(data.pay_amount),
+    payCurrency: data.pay_currency,
+    payinExtraId: data.payin_extra_id ?? null,
+    network: data.network ?? null,
+    paymentStatus: data.payment_status,
+  };
 }
 
 export async function getPaymentStatus(
