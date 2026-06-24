@@ -10,7 +10,7 @@
  * confirmation arrives via webhook, which records the payment on the order but
  * KEEPS the order "pending" so an admin still assigns/verifies it manually.
  */
-import crypto from "crypto";
+import { createHash } from "node:crypto";
 import type { Express, Request, Response } from "express";
 import { ENV } from "./_core/env";
 import * as db from "./db";
@@ -30,7 +30,7 @@ export function isCryptomusConfigured(): boolean {
 function makeSign(payload: unknown): string {
   const json = JSON.stringify(payload).replace(/\//g, "\\/");
   const base64 = Buffer.from(json).toString("base64");
-  return crypto.createHash("md5").update(base64 + ENV.cryptomusApiKey).digest("hex");
+  return createHash("md5").update(base64 + ENV.cryptomusApiKey).digest("hex");
 }
 
 export function verifyWebhookSign(body: Record<string, any>): boolean {
