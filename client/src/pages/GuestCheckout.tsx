@@ -48,12 +48,9 @@ export default function GuestCheckout() {
     { planId: planId!, connections },
     { enabled: !!planId }
   );
-  const { data: cryptomusEnabled } = trpc.payments.cryptomusEnabled.useQuery();
-  
   // For authenticated users
   const createOrder = trpc.orders.create.useMutation();
   const confirmPayment = trpc.orders.confirmPayment.useMutation();
-  const createCryptomusInvoice = trpc.payments.createCryptomusInvoice.useMutation();
   
   // Guest checkout state
   const [email, setEmail] = useState("");
@@ -78,7 +75,7 @@ export default function GuestCheckout() {
   const price = plan?.pricing?.find(p => p.connections === connections)?.price || "0.00";
   
   const selectedPaymentMethod = paymentMethods?.find(m => m.id.toString() === selectedMethod);
-  const isCrypto = selectedMethod === "crypto-cryptomus";
+  const isCrypto = selectedPaymentMethod?.type === "crypto";
   
   // Countdown effect for payment confirmation
   useEffect(() => {
@@ -158,9 +155,9 @@ export default function GuestCheckout() {
           planId: planId!,
           connections,
           price,
-          paymentMethodId: !isCrypto ? parseInt(selectedMethod) : undefined,
-          paymentMethodName: isCrypto ? "Cryptocurrency (Cryptomus)" : selectedPaymentMethod?.name,
-          paymentMethodType: isCrypto ? "crypto" : selectedPaymentMethod?.type,
+          paymentMethodId: parseInt(selectedMethod),
+          paymentMethodName: selectedPaymentMethod?.name,
+          paymentMethodType: selectedPaymentMethod?.type,
         }),
       });
       
@@ -178,9 +175,9 @@ export default function GuestCheckout() {
       // Refresh auth state to get the new session
       await refresh();
 
-      // Crypto: redirect to the Cryptomus hosted payment page (order stays pending)
-      if (isCrypto && data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      // Crypto: go to our white-label payment page (order stays pending/preparing)
+      if (isCrypto && data.orderId) {
+        setLocation(`/pay/${data.orderId}`);
         return;
       }
 
@@ -208,21 +205,16 @@ export default function GuestCheckout() {
         planId: planId!,
         connections,
         price,
-        paymentMethodId: !isCrypto ? parseInt(selectedMethod) : undefined,
-        paymentMethodName: isCrypto ? "Cryptocurrency (Cryptomus)" : selectedPaymentMethod?.name,
-        paymentMethodType: isCrypto ? "crypto" : selectedPaymentMethod?.type,
+        paymentMethodId: parseInt(selectedMethod),
+        paymentMethodName: selectedPaymentMethod?.name,
+        paymentMethodType: selectedPaymentMethod?.type,
       });
 
       const newOrderId = result.orderId || null;
       setOrderId(newOrderId);
 
       if (isCrypto && newOrderId) {
-        try {
-          const invoice = await createCryptomusInvoice.mutateAsync({ orderId: newOrderId });
-          window.location.href = invoice.url;
-        } catch (e) {
-          toast.error("Failed to start crypto payment. Please try again.");
-        }
+        setLocation(`/pay/${newOrderId}`);
         return;
       }
 
@@ -383,25 +375,7 @@ export default function GuestCheckout() {
           </CardHeader>
           <CardContent>
             <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod}>
-              {/* Crypto (Cryptomus) Option */}
-              {cryptomusEnabled?.enabled && (
-                <div className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
-                  <RadioGroupItem value="crypto-cryptomus" id="crypto-cryptomus" />
-                  <Label htmlFor="crypto-cryptomus" className="flex-1 cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-amber-500/10">
-                        <Bitcoin className="h-5 w-5 text-amber-500" />
-                      </div>
-                      <div>
-                        <div className="font-medium">Cryptocurrency</div>
-                        <div className="text-sm text-muted-foreground">Pay with Bitcoin, USDT, and more</div>
-                      </div>
-                    </div>
-                  </Label>
-                </div>
-              )}
-              
-              {/* Other Payment Methods */}
+              {/* Payment Methods (managed in admin -> Payment Methods) */}
               {paymentMethods?.map(method => (
                 <div 
                   key={method.id}
@@ -469,7 +443,7 @@ export default function GuestCheckout() {
               </p>
             </div>
             
-            {selectedMethod === "crypto-cryptomus" ? (
+            {isCrypto ? (
               <div className="space-y-4 w-full">
                 <div className="flex justify-center w-full">
                   <p className="text-sm text-muted-foreground text-center">

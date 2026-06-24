@@ -5,7 +5,7 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerGuestCheckoutRoutes } from "../guestCheckout";
-import { registerCryptomusRoutes } from "../cryptomus";
+import { registerNowPaymentsRoutes } from "../nowpayments";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -48,8 +48,8 @@ async function startServer() {
   // Guest checkout routes
   registerGuestCheckoutRoutes(app);
   
-  // Cryptomus crypto payment webhook
-  registerCryptomusRoutes(app);
+  // NowPayments crypto payment IPN webhook
+  registerNowPaymentsRoutes(app);
   
   // tRPC API
   app.use(

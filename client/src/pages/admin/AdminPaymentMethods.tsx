@@ -316,6 +316,13 @@ export default function AdminPaymentMethods() {
                     <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
+                {methodForm.type === "crypto" && (
+                  <p className="text-xs text-muted-foreground">
+                    Crypto is processed automatically on your own payment page (NowPayments API).
+                    Requires NOWPAYMENTS_API_KEY, NOWPAYMENTS_IPN_SECRET and APP_URL env vars.
+                    Instructions/payment link are ignored.
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">

@@ -35,6 +35,7 @@ import AdminApps from "./pages/admin/AdminApps";
 import AdminActivations from "./pages/admin/AdminActivations";
 import AdminMessages from "./pages/admin/AdminMessages";
 import Apps from "./pages/Apps";
+import Pay from "./pages/Pay";
 
 // Protected route wrapper
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -128,6 +129,9 @@ function Router() {
       </Route>
       <Route path="/apps">
         {() => <ProtectedRoute component={Apps} />}
+      </Route>
+      <Route path="/pay/:orderId">
+        {() => <ProtectedRoute component={Pay} />}
       </Route>
       <Route path="/profile">
         {() => <ProtectedRoute component={Profile} />}
