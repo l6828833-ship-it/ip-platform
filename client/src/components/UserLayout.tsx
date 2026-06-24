@@ -148,7 +148,7 @@ function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps
                   <img
                     src="https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png"
                     alt="IPTV TOP"
-                    className="h-7 w-auto"
+                    className="h-20 w-auto"
                   />
                 </Link>
               )}
