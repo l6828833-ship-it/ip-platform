@@ -51,7 +51,6 @@ export default function GuestCheckout() {
   // For authenticated users
   const createOrder = trpc.orders.create.useMutation();
   const confirmPayment = trpc.orders.confirmPayment.useMutation();
-  const createCryptomusInvoice = trpc.payments.createCryptomusInvoice.useMutation();
   
   // Guest checkout state
   const [email, setEmail] = useState("");
@@ -176,9 +175,9 @@ export default function GuestCheckout() {
       // Refresh auth state to get the new session
       await refresh();
 
-      // Crypto: redirect to the Cryptomus hosted payment page (order stays pending)
-      if (isCrypto && data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      // Crypto: go to our white-label payment page (order stays pending/preparing)
+      if (isCrypto && data.orderId) {
+        setLocation(`/pay/${data.orderId}`);
         return;
       }
 
@@ -215,12 +214,7 @@ export default function GuestCheckout() {
       setOrderId(newOrderId);
 
       if (isCrypto && newOrderId) {
-        try {
-          const invoice = await createCryptomusInvoice.mutateAsync({ orderId: newOrderId });
-          window.location.href = invoice.url;
-        } catch (e) {
-          toast.error("Failed to start crypto payment. Please try again.");
-        }
+        setLocation(`/pay/${newOrderId}`);
         return;
       }
 

@@ -7,7 +7,12 @@ import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { sendOrderConfirmationEmail, sendCredentialsEmail, sendPaymentVerificationEmail, sendNewChatMessageEmail, sendAdminNewOrderEmail, sendTestEmail, sendOrderRejectionEmail, sendWelcomeEmail } from "./mailtrap";
 import { runEmailDiagnostic } from "./emailDiagnostic";
-import { isCryptomusConfigured, createCryptomusPayment } from "./cryptomus";
+import {
+  isNowPaymentsConfigured,
+  getMerchantCoins,
+  createPayment as npCreatePayment,
+  syncOrderPaymentStatus,
+} from "./nowpayments";
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1161,16 +1166,21 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ PAYMENTS (CRYPTOMUS) ============
-  payments: router({
-    // Whether Cryptomus crypto checkout is available
-    cryptomusEnabled: publicProcedure.query(() => {
-      return { enabled: isCryptomusConfigured() };
+  // ============ PAYMENTS (NOWPAYMENTS) ============
+  nowpayments: router({
+    // Whether crypto checkout is available
+    enabled: publicProcedure.query(() => {
+      return { enabled: isNowPaymentsConfigured() };
     }),
 
-    // Create a Cryptomus hosted payment for an existing pending order
-    createCryptomusInvoice: protectedProcedure
-      .input(z.object({ orderId: z.number() }))
+    // Coins the merchant has enabled
+    currencies: publicProcedure.query(async () => {
+      return getMerchantCoins();
+    }),
+
+    // Create a crypto payment for an existing pending order and return pay details
+    createPayment: protectedProcedure
+      .input(z.object({ orderId: z.number(), payCurrency: z.string().min(1) }))
       .mutation(async ({ input, ctx }) => {
         const order = await db.getOrderById(input.orderId);
         if (!order) {
@@ -1179,22 +1189,51 @@ export const appRouter = router({
         if (order.userId !== ctx.user.id && ctx.user.role === "user") {
           throw new TRPCError({ code: "FORBIDDEN" });
         }
-        if (!isCryptomusConfigured()) {
+        if (!isNowPaymentsConfigured()) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Crypto payments are not configured" });
         }
 
-        const payment = await createCryptomusPayment({
+        const payment = await npCreatePayment({
           orderId: order.id,
           amount: String(order.price),
-          currency: "USD",
+          payCurrency: input.payCurrency,
         });
-
         if (!payment) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create crypto payment" });
         }
 
-        await db.updateOrder(order.id, { cryptomusUuid: payment.uuid, cryptomusStatus: "created" });
-        return { url: payment.url };
+        await db.updateOrder(order.id, {
+          nowpaymentsPaymentId: payment.paymentId,
+          nowpaymentsStatus: payment.paymentStatus,
+          paymentMethodType: "crypto",
+          paymentMethodName: order.paymentMethodName || "Cryptocurrency",
+        });
+        return payment;
+      }),
+
+    // Poll payment status for an order (also syncs from NowPayments)
+    status: protectedProcedure
+      .input(z.object({ orderId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const order = await db.getOrderById(input.orderId);
+        if (!order) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+        }
+        if (order.userId !== ctx.user.id && ctx.user.role === "user") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+
+        let paymentStatus = order.nowpaymentsStatus || null;
+        if (order.nowpaymentsPaymentId) {
+          const synced = await syncOrderPaymentStatus(order.id, order.nowpaymentsPaymentId);
+          if (synced) paymentStatus = synced;
+        }
+        const fresh = await db.getOrderById(input.orderId);
+        return {
+          paymentStatus,
+          paid: !!fresh?.paymentConfirmedAt,
+          orderStatus: fresh?.status ?? order.status,
+        };
       }),
   }),
 

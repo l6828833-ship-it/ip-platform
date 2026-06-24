@@ -95,9 +95,9 @@ export const orders = pgTable("orders", {
   paymentWidgetId: integer("paymentWidgetId"),
   paymentMethodName: varchar("paymentMethodName", { length: 255 }),
   paymentMethodType: varchar("paymentMethodType", { length: 50 }),
-  // Cryptomus crypto payment tracking
-  cryptomusUuid: varchar("cryptomusUuid", { length: 255 }),
-  cryptomusStatus: varchar("cryptomusStatus", { length: 50 }),
+  // NowPayments crypto payment tracking
+  nowpaymentsPaymentId: varchar("nowpaymentsPaymentId", { length: 255 }),
+  nowpaymentsStatus: varchar("nowpaymentsStatus", { length: 50 }),
   credentialsType: guestCredentialsTypeEnum("credentialsType").default("xtream"),
   macAddress: varchar("macAddress", { length: 50 }),
   status: orderStatusEnum("status").default("pending").notNull(),

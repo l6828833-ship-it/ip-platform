@@ -38,7 +38,6 @@ export default function Checkout() {
   );
   const createOrder = trpc.orders.create.useMutation();
   const confirmPayment = trpc.orders.confirmPayment.useMutation();
-  const createCryptomusInvoice = trpc.payments.createCryptomusInvoice.useMutation();
   
   const [selectedMethod, setSelectedMethod] = useState<string>("");
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -111,15 +110,10 @@ export default function Checkout() {
       const newOrderId = result.orderId || null;
       setOrderId(newOrderId);
 
-      // Crypto: create a Cryptomus invoice and redirect to the hosted payment page.
-      // The order stays "pending" until an admin verifies/assigns it.
+      // Crypto: send the user to our own white-label payment page.
+      // The order stays "pending" (preparing) until payment is detected + admin assigns.
       if (isCrypto && newOrderId) {
-        try {
-          const invoice = await createCryptomusInvoice.mutateAsync({ orderId: newOrderId });
-          window.location.href = invoice.url;
-        } catch (e) {
-          toast.error("Failed to start crypto payment. Please try again.");
-        }
+        setLocation(`/pay/${newOrderId}`);
         return;
       }
 

@@ -318,8 +318,9 @@ export default function AdminPaymentMethods() {
                 </Select>
                 {methodForm.type === "crypto" && (
                   <p className="text-xs text-muted-foreground">
-                    Crypto is processed automatically via Cryptomus. Requires CRYPTOMUS_MERCHANT_ID,
-                    CRYPTOMUS_API_KEY and APP_URL env vars. Instructions/payment link are ignored.
+                    Crypto is processed automatically on your own payment page (NowPayments API).
+                    Requires NOWPAYMENTS_API_KEY, NOWPAYMENTS_IPN_SECRET and APP_URL env vars.
+                    Instructions/payment link are ignored.
                   </p>
                 )}
               </div>

@@ -5,7 +5,6 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
 import { supabaseClient, supabaseAdmin } from "./supabase";
 import { sendOrderConfirmationEmail, sendAdminNewOrderEmail, sendWelcomeEmail } from "./mailtrap";
-import { createCryptomusPayment, isCryptomusConfigured } from "./cryptomus";
 
 /**
  * Register guest checkout routes
@@ -184,25 +183,6 @@ export function registerGuestCheckoutRoutes(app: Express) {
         return;
       }
 
-      // For crypto payments, create a Cryptomus invoice and return its URL.
-      // The order stays "pending" until an admin verifies/assigns it.
-      let paymentUrl: string | undefined;
-      if (paymentMethodType === "crypto" && isCryptomusConfigured()) {
-        const payment = await createCryptomusPayment({
-          orderId,
-          amount: String(price),
-          currency: "USD",
-        });
-        if (payment) {
-          paymentUrl = payment.url;
-          try {
-            await db.updateOrder(orderId, { cryptomusUuid: payment.uuid, cryptomusStatus: "created" });
-          } catch (e) {
-            console.error("[Guest Checkout] Failed to store cryptomus uuid:", e);
-          }
-        }
-      }
-
       // Credentials preference is now stored in the order
       const credentialsData = {
         credentialsType: credentialsType || "xtream",
@@ -293,7 +273,6 @@ export function registerGuestCheckoutRoutes(app: Express) {
         userId,
         isNewUser,
         credentialsType,
-        paymentUrl,
         message: isNewUser 
           ? "Account created and order placed successfully" 
           : "Order placed successfully"
