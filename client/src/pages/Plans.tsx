@@ -50,7 +50,7 @@ export default function Plans() {
             <h1 className="text-2xl font-bold">Subscription Plans</h1>
             <p className="text-muted-foreground">Choose the perfect plan for your needs</p>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mx-auto">
             {[1, 2, 3].map(i => (
               <div key={i} className="skeleton h-96 rounded-xl" />
             ))}
@@ -112,12 +112,12 @@ export default function Plans() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {plans.map((plan, index) => {
               const connections = getConnections(plan.id, plan.maxConnections);
               const price = getPrice(plan, connections);
               const points = getPoints(plan, connections);
-              const isPopular = index === 1;
+              const isPopular = plan.promoText ? true : index === 1;
               
               return (
                 <Card 
