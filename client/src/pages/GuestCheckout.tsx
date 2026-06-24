@@ -48,14 +48,12 @@ export default function GuestCheckout() {
     { planId: planId!, connections },
     { enabled: !!planId }
   );
-  const { data: paymentWidget } = trpc.paymentWidgets.getForPlan.useQuery(
-    { planId: planId!, connections },
-    { enabled: !!planId }
-  );
+  const { data: cryptomusEnabled } = trpc.payments.cryptomusEnabled.useQuery();
   
   // For authenticated users
   const createOrder = trpc.orders.create.useMutation();
   const confirmPayment = trpc.orders.confirmPayment.useMutation();
+  const createCryptomusInvoice = trpc.payments.createCryptomusInvoice.useMutation();
   
   // Guest checkout state
   const [email, setEmail] = useState("");
@@ -80,7 +78,7 @@ export default function GuestCheckout() {
   const price = plan?.pricing?.find(p => p.connections === connections)?.price || "0.00";
   
   const selectedPaymentMethod = paymentMethods?.find(m => m.id.toString() === selectedMethod);
-  const isCrypto = selectedPaymentMethod?.type === "crypto" || selectedMethod === "crypto-widget";
+  const isCrypto = selectedMethod === "crypto-cryptomus";
   
   // Countdown effect for payment confirmation
   useEffect(() => {
@@ -160,10 +158,9 @@ export default function GuestCheckout() {
           planId: planId!,
           connections,
           price,
-          paymentMethodId: selectedMethod !== "crypto-widget" ? parseInt(selectedMethod) : undefined,
-          paymentWidgetId: selectedMethod === "crypto-widget" ? paymentWidget?.id : undefined,
-          paymentMethodName: selectedMethod === "crypto-widget" ? "Cryptocurrency" : selectedPaymentMethod?.name,
-          paymentMethodType: selectedMethod === "crypto-widget" ? "crypto" : selectedPaymentMethod?.type,
+          paymentMethodId: !isCrypto ? parseInt(selectedMethod) : undefined,
+          paymentMethodName: isCrypto ? "Cryptocurrency (Cryptomus)" : selectedPaymentMethod?.name,
+          paymentMethodType: isCrypto ? "crypto" : selectedPaymentMethod?.type,
         }),
       });
       
@@ -177,13 +174,20 @@ export default function GuestCheckout() {
       
       setAccountCreated(true);
       setOrderId(data.orderId);
+
+      // Refresh auth state to get the new session
+      await refresh();
+
+      // Crypto: redirect to the Cryptomus hosted payment page (order stays pending)
+      if (isCrypto && data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+
       setPaymentLinkOpened(false); // Reset for payment dialog
       setPaymentLinkCountdown(0); // Reset countdown
       setShowAutoOpenButton(false);
       setShowPaymentDialog(true);
-      
-      // Refresh auth state to get the new session
-      await refresh();
       
     } catch (error) {
       console.error("Guest checkout error:", error);
@@ -204,13 +208,24 @@ export default function GuestCheckout() {
         planId: planId!,
         connections,
         price,
-        paymentMethodId: selectedMethod !== "crypto-widget" ? parseInt(selectedMethod) : undefined,
-        paymentWidgetId: selectedMethod === "crypto-widget" ? paymentWidget?.id : undefined,
-        paymentMethodName: selectedMethod === "crypto-widget" ? "Cryptocurrency" : selectedPaymentMethod?.name,
-        paymentMethodType: selectedMethod === "crypto-widget" ? "crypto" : selectedPaymentMethod?.type,
+        paymentMethodId: !isCrypto ? parseInt(selectedMethod) : undefined,
+        paymentMethodName: isCrypto ? "Cryptocurrency (Cryptomus)" : selectedPaymentMethod?.name,
+        paymentMethodType: isCrypto ? "crypto" : selectedPaymentMethod?.type,
       });
-      
-      setOrderId(result.orderId || null);
+
+      const newOrderId = result.orderId || null;
+      setOrderId(newOrderId);
+
+      if (isCrypto && newOrderId) {
+        try {
+          const invoice = await createCryptomusInvoice.mutateAsync({ orderId: newOrderId });
+          window.location.href = invoice.url;
+        } catch (e) {
+          toast.error("Failed to start crypto payment. Please try again.");
+        }
+        return;
+      }
+
       setPaymentLinkOpened(false); // Reset for payment dialog
       setPaymentLinkCountdown(0); // Reset countdown
       setShowAutoOpenButton(false);
@@ -368,18 +383,18 @@ export default function GuestCheckout() {
           </CardHeader>
           <CardContent>
             <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod}>
-              {/* Crypto Widget Option */}
-              {paymentWidget && (
+              {/* Crypto (Cryptomus) Option */}
+              {cryptomusEnabled?.enabled && (
                 <div className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer">
-                  <RadioGroupItem value="crypto-widget" id="crypto-widget" />
-                  <Label htmlFor="crypto-widget" className="flex-1 cursor-pointer">
+                  <RadioGroupItem value="crypto-cryptomus" id="crypto-cryptomus" />
+                  <Label htmlFor="crypto-cryptomus" className="flex-1 cursor-pointer">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-lg bg-amber-500/10">
                         <Bitcoin className="h-5 w-5 text-amber-500" />
                       </div>
                       <div>
                         <div className="font-medium">Cryptocurrency</div>
-                        <div className="text-sm text-muted-foreground">Pay with Bitcoin, Ethereum, and more</div>
+                        <div className="text-sm text-muted-foreground">Pay with Bitcoin, USDT, and more</div>
                       </div>
                     </div>
                   </Label>
@@ -454,23 +469,12 @@ export default function GuestCheckout() {
               </p>
             </div>
             
-            {selectedMethod === "crypto-widget" ? (
+            {selectedMethod === "crypto-cryptomus" ? (
               <div className="space-y-4 w-full">
-                <p className="text-sm font-medium text-center mb-4">
-                  Complete your payment using the widget below
-                </p>
-                <div className="flex justify-center w-full overflow-x-auto">
-                  <iframe 
-                    src={`https://nowpayments.io/embeds/payment-widget?iid=${paymentWidget?.invoiceId}`}
-                    width="410" 
-                    height="696" 
-                    frameBorder="0" 
-                    scrolling="yes" 
-                    style={{ overflow: 'auto', minWidth: '410px' }}
-                    title="NOWPayments Payment Widget"
-                  >
-                    Can't load widget
-                  </iframe>
+                <div className="flex justify-center w-full">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Redirecting you to the secure crypto payment page...
+                  </p>
                 </div>
               </div>
             ) : (

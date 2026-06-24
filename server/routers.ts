@@ -7,6 +7,7 @@ import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import { sendOrderConfirmationEmail, sendCredentialsEmail, sendPaymentVerificationEmail, sendNewChatMessageEmail, sendAdminNewOrderEmail, sendTestEmail, sendOrderRejectionEmail, sendWelcomeEmail } from "./mailtrap";
 import { runEmailDiagnostic } from "./emailDiagnostic";
+import { isCryptomusConfigured, createCryptomusPayment } from "./cryptomus";
 
 // Admin procedure - only allows admin role
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1157,6 +1158,43 @@ export const appRouter = router({
           entityId: input.id,
         });
         return { success: true };
+      }),
+  }),
+
+  // ============ PAYMENTS (CRYPTOMUS) ============
+  payments: router({
+    // Whether Cryptomus crypto checkout is available
+    cryptomusEnabled: publicProcedure.query(() => {
+      return { enabled: isCryptomusConfigured() };
+    }),
+
+    // Create a Cryptomus hosted payment for an existing pending order
+    createCryptomusInvoice: protectedProcedure
+      .input(z.object({ orderId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const order = await db.getOrderById(input.orderId);
+        if (!order) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
+        }
+        if (order.userId !== ctx.user.id && ctx.user.role === "user") {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        if (!isCryptomusConfigured()) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Crypto payments are not configured" });
+        }
+
+        const payment = await createCryptomusPayment({
+          orderId: order.id,
+          amount: String(order.price),
+          currency: "USD",
+        });
+
+        if (!payment) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create crypto payment" });
+        }
+
+        await db.updateOrder(order.id, { cryptomusUuid: payment.uuid, cryptomusStatus: "created" });
+        return { url: payment.url };
       }),
   }),
 

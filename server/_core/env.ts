@@ -12,4 +12,9 @@ export const ENV = {
   brevoApiKey: process.env.BREVO_API_KEY ?? "",
   brevoSenderEmail: process.env.BREVO_SENDER_EMAIL ?? "",
   brevoSenderName: process.env.BREVO_SENDER_NAME ?? "IPTV Premium",
+  // Cryptomus crypto payment configuration
+  cryptomusMerchantId: process.env.CRYPTOMUS_MERCHANT_ID ?? "",
+  cryptomusApiKey: process.env.CRYPTOMUS_API_KEY ?? "",
+  // Public base URL of the app (used for payment callback/return URLs)
+  appUrl: process.env.VITE_APP_URL ?? process.env.APP_URL ?? "",
 };
