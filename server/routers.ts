@@ -1197,10 +1197,12 @@ export const appRouter = router({
           orderId: order.id,
           amount: String(order.price),
           payCurrency: input.payCurrency,
+        }).catch((e: any) => {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: e?.message || "Failed to create crypto payment",
+          });
         });
-        if (!payment) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create crypto payment" });
-        }
 
         await db.updateOrder(order.id, {
           nowpaymentsPaymentId: payment.paymentId,
