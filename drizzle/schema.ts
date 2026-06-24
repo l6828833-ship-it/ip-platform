@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: userRoleEnum("role").default("user").notNull(),
   emailVerified: boolean("emailVerified").default(false).notNull(),
+  // Activation points balance used to activate apps
+  activationPoints: integer("activationPoints").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -27,6 +29,8 @@ export const plans = pgTable("plans", {
   isActive: boolean("isActive").default(true).notNull(),
   features: json("features").$type<string[]>(),
   promoText: varchar("promoText", { length: 100 }),
+  // Activation points granted to the user when they purchase this plan
+  activationPoints: integer("activationPoints").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -193,6 +197,80 @@ export const siteSettings = pgTable("siteSettings", {
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
+// ============ ACTIVATION APPS ============
+
+// A single configurable form field for an app
+export type AppField = {
+  key: string;
+  label: string;
+  type: "text" | "mac" | "email" | "number";
+  required: boolean;
+  placeholder?: string;
+};
+
+// Activation apps - admin-managed apps users can activate using points
+export const apps = pgTable("apps", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  iconUrl: text("iconUrl"),
+  description: text("description"),
+  // Instructions shown in a popup when the user opens the app
+  instructions: text("instructions"),
+  instructionsLink: text("instructionsLink"),
+  // Points deducted from the user when they submit an activation
+  pointsCost: integer("pointsCost").default(1).notNull(),
+  // Admin-defined form fields (1 or more) collected on activation
+  fields: json("fields").$type<AppField[]>(),
+  isActive: boolean("isActive").default(true).notNull(),
+  sortOrder: integer("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+// Activation request status enum
+export const activationStatusEnum = pgEnum("activation_status", ["pending", "activated", "rejected"]);
+
+// Activation requests submitted by users (points deducted, admin activates manually)
+export const activationRequests = pgTable("activationRequests", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  appId: integer("appId").notNull(),
+  appTitle: varchar("appTitle", { length: 255 }).notNull(),
+  // Submitted form values keyed by field key
+  formData: json("formData").$type<Record<string, string>>(),
+  pointsSpent: integer("pointsSpent").default(0).notNull(),
+  status: activationStatusEnum("status").default("pending").notNull(),
+  adminNotes: text("adminNotes"),
+  processedBy: integer("processedBy"),
+  processedAt: timestamp("processedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+// Dashboard message style enum
+export const dashboardMessageStyleEnum = pgEnum("dashboard_message_style", ["info", "success", "warning", "error"]);
+
+// Dashboard messages shown to users (global when userId is null, otherwise targeted)
+export const dashboardMessages = pgTable("dashboardMessages", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }),
+  body: text("body").notNull(),
+  style: dashboardMessageStyleEnum("style").default("info").notNull(),
+  userId: integer("userId"), // null = global message for all users
+  isDismissible: boolean("isDismissible").default(true).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+// Tracks which dismissible messages a user has dismissed
+export const dashboardMessageDismissals = pgTable("dashboardMessageDismissals", {
+  id: serial("id").primaryKey(),
+  messageId: integer("messageId").notNull(),
+  userId: integer("userId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -219,3 +297,11 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = typeof activityLogs.$inferInsert;
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type InsertSiteSetting = typeof siteSettings.$inferInsert;
+export type App = typeof apps.$inferSelect;
+export type InsertApp = typeof apps.$inferInsert;
+export type ActivationRequest = typeof activationRequests.$inferSelect;
+export type InsertActivationRequest = typeof activationRequests.$inferInsert;
+export type DashboardMessage = typeof dashboardMessages.$inferSelect;
+export type InsertDashboardMessage = typeof dashboardMessages.$inferInsert;
+export type DashboardMessageDismissal = typeof dashboardMessageDismissals.$inferSelect;
+export type InsertDashboardMessageDismissal = typeof dashboardMessageDismissals.$inferInsert;

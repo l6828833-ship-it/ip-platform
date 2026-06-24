@@ -28,6 +28,7 @@ type PlanFormData = {
   maxConnections: number;
   features: string;
   promoText: string;
+  activationPoints: number;
   isActive: boolean;
   pricing: { connections: number; price: string }[];
 };
@@ -39,6 +40,7 @@ const defaultPlanForm: PlanFormData = {
   maxConnections: 10,
   features: "",
   promoText: "",
+  activationPoints: 0,
   isActive: true,
   pricing: Array.from({ length: 10 }, (_, i) => ({ connections: i + 1, price: "" }))
 };
@@ -96,6 +98,7 @@ export default function AdminPlans() {
       maxConnections: plan.maxConnections,
       features: (plan.features as string[] || []).join("\n"),
       promoText: plan.promoText || "",
+      activationPoints: plan.activationPoints ?? 0,
       isActive: plan.isActive,
       pricing: Array.from({ length: 10 }, (_, i) => {
         const existing = plan.pricing?.find(p => p.connections === i + 1);
@@ -125,6 +128,7 @@ export default function AdminPlans() {
       maxConnections: planForm.maxConnections,
       features,
       promoText: planForm.promoText || null,
+      activationPoints: planForm.activationPoints,
       isActive: planForm.isActive,
       pricing
     };
@@ -335,6 +339,20 @@ export default function AdminPlans() {
                   maxLength={100}
                 />
                 <p className="text-xs text-muted-foreground">Leave blank to hide the promotional badge</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Activation Points Granted</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={planForm.activationPoints}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, activationPoints: parseInt(e.target.value) || 0 }))}
+                  placeholder="0"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Activation points the user receives when this plan's order is verified
+                </p>
               </div>
               
               <div className="flex items-center gap-2">

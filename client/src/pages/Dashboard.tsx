@@ -24,15 +24,25 @@ import {
   Lock,
   Link as LinkIcon,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Coins,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const utils = trpc.useUtils();
   const { data: orders, isLoading: ordersLoading } = trpc.orders.myOrders.useQuery();
   const { data: credentials, isLoading: credentialsLoading } = trpc.credentials.myCredentials.useQuery();
   const { data: plans } = trpc.plans.list.useQuery({ activeOnly: true });
+  const { data: pointsData } = trpc.activations.myPoints.useQuery();
+  const { data: messages } = trpc.dashboardMessages.forMe.useQuery();
+  const dismissMessage = trpc.dashboardMessages.dismiss.useMutation({
+    onSuccess: () => utils.dashboardMessages.forMe.invalidate(),
+  });
+
+  const activationPoints = pointsData?.points ?? 0;
   
   const pendingOrders = orders?.filter(o => o.status === "pending").length || 0;
   const verifiedOrders = orders?.filter(o => o.status === "verified").length || 0;
@@ -281,8 +291,57 @@ export default function Dashboard() {
 
         </div>
         
+        {/* Dashboard Messages */}
+        {messages && messages.length > 0 && (
+          <div className="space-y-3">
+            {messages.map((m) => {
+              const styles: Record<string, string> = {
+                info: "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+                success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                warning: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                error: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
+              };
+              return (
+                <div
+                  key={m.id}
+                  className={`relative rounded-lg border px-4 py-3 ${styles[m.style] || styles.info}`}
+                >
+                  {m.title && <div className="font-semibold mb-1">{m.title}</div>}
+                  <div className="text-sm whitespace-pre-line pr-6">{m.body}</div>
+                  {m.isDismissible && (
+                    <button
+                      onClick={() => dismissMessage.mutate({ messageId: m.id })}
+                      className="absolute top-2 right-2 p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
+                      aria-label="Dismiss"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Stats Cards - Important Stats Only */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Card className="card-hover">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Activation Points
+              </CardTitle>
+              <Coins className="h-4 w-4 text-amber-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{activationPoints}</div>
+              <Link href="/apps">
+                <span className="text-xs text-primary hover:underline cursor-pointer mt-1 inline-block">
+                  Activate apps
+                </span>
+              </Link>
+            </CardContent>
+          </Card>
+
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -361,18 +420,102 @@ export default function Dashboard() {
 
           {/* Credentials Tabs */}
           {!credentials || credentials.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Key className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="font-semibold mb-2">No Credentials Yet</h3>
-                <p className="text-muted-foreground text-sm mb-4">
-                  You don't have any IPTV credentials yet. Purchase a plan to get started.
-                </p>
-                <Link href="/plans">
-                  <Button>Browse Plans</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="py-10 text-center">
+                  <Key className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="font-semibold mb-2">No Active Subscription Yet</h3>
+                  <p className="text-muted-foreground text-sm">
+                    You don't have any IPTV credentials yet. Choose a plan below to get started.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Inline Plans */}
+              {plans && plans.length > 0 && (
+                <div>
+                  <div className="text-center mb-4">
+                    <h3 className="text-xl font-bold">Choose a Plan</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Pick a subscription to activate your IPTV access
+                    </p>
+                  </div>
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {plans.map((plan, index) => {
+                      const pricing = plan.pricing
+                        ?.slice()
+                        .sort((a, b) => a.connections - b.connections);
+                      const startingPrice = pricing?.[0]?.price ?? "0.00";
+                      const startingConnections = pricing?.[0]?.connections ?? 1;
+                      const isPopular = index === 1;
+
+                      return (
+                        <Card
+                          key={plan.id}
+                          className={`relative card-hover ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}
+                        >
+                          {plan.promoText && (
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                              <Badge className="bg-red-500 hover:bg-red-600 text-white">
+                                {plan.promoText}
+                              </Badge>
+                            </div>
+                          )}
+                          <CardHeader className="text-center pb-2">
+                            <CardTitle className="text-xl">{plan.name}</CardTitle>
+                            <CardDescription>{plan.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="text-center">
+                              <div className="flex items-baseline justify-center gap-1">
+                                <span className="text-xs text-muted-foreground">from</span>
+                                <span className="text-3xl font-bold">${startingPrice}</span>
+                                <span className="text-muted-foreground">/{plan.durationDays} days</span>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              {((plan.features as string[]) || []).slice(0, 4).map((feature, i) => (
+                                <div key={i} className="flex items-center gap-2 text-sm">
+                                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                                  <span>{feature}</span>
+                                </div>
+                              ))}
+                              <div className="flex items-center gap-2 text-sm">
+                                <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                                <span>Up to {plan.maxConnections} connections</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm">
+                                <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                                <span>{plan.durationDays} days validity</span>
+                              </div>
+                            </div>
+                            <Link
+                              href={`/checkout/${plan.id}?connections=${startingConnections}`}
+                              className="block"
+                            >
+                              <Button
+                                className={`w-full ${isPopular ? "gradient-primary" : ""}`}
+                                variant={isPopular ? "default" : "outline"}
+                              >
+                                Select Plan
+                              </Button>
+                            </Link>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                  <div className="text-center mt-4">
+                    <Link href="/plans">
+                      <Button variant="ghost" className="gap-2">
+                        View all plan details
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Tabs defaultValue="active" className="w-full">
               <TabsList>

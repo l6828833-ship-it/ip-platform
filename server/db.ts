@@ -1,4 +1,4 @@
-import { eq, and, desc, asc, gte, lte, sql, inArray, or } from "drizzle-orm";
+import { eq, and, desc, asc, gte, lte, sql, inArray, or, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { 
@@ -13,7 +13,11 @@ import {
   chatMessages, InsertChatMessage,
   emailTemplates, InsertEmailTemplate,
   activityLogs, InsertActivityLog,
-  siteSettings, InsertSiteSetting
+  siteSettings, InsertSiteSetting,
+  apps, InsertApp,
+  activationRequests, InsertActivationRequest,
+  dashboardMessages, InsertDashboardMessage,
+  dashboardMessageDismissals
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -630,4 +634,157 @@ export async function getDashboardStats() {
     totalRevenue: revenueSum?.sum ?? "0",
     activeCredentials: Number(credentialCount?.count ?? 0),
   };
+}
+
+
+// ============ ACTIVATION POINTS ============
+export async function addUserActivationPoints(userId: number, amount: number) {
+  const db = await getDb();
+  if (!db || amount === 0) return;
+  await db.update(users)
+    .set({ activationPoints: sql`${users.activationPoints} + ${amount}` })
+    .where(eq(users.id, userId));
+}
+
+export async function deductUserActivationPoints(userId: number, amount: number) {
+  const db = await getDb();
+  if (!db || amount === 0) return;
+  await db.update(users)
+    .set({ activationPoints: sql`GREATEST(${users.activationPoints} - ${amount}, 0)` })
+    .where(eq(users.id, userId));
+}
+
+// ============ APPS ============
+export async function createApp(app: InsertApp) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(apps).values(app).returning({ id: apps.id });
+  return result[0]?.id ?? null;
+}
+
+export async function updateApp(id: number, app: Partial<InsertApp>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(apps).set({ ...app, updatedAt: new Date() }).where(eq(apps.id, id));
+}
+
+export async function deleteApp(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(apps).where(eq(apps.id, id));
+}
+
+export async function getAppById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(apps).where(eq(apps.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllApps(activeOnly = false) {
+  const db = await getDb();
+  if (!db) return [];
+  if (activeOnly) {
+    return db.select().from(apps).where(eq(apps.isActive, true)).orderBy(asc(apps.sortOrder), asc(apps.id));
+  }
+  return db.select().from(apps).orderBy(asc(apps.sortOrder), asc(apps.id));
+}
+
+// ============ ACTIVATION REQUESTS ============
+export async function createActivationRequest(request: InsertActivationRequest) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(activationRequests).values(request).returning({ id: activationRequests.id });
+  return result[0]?.id ?? null;
+}
+
+export async function getActivationRequestById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(activationRequests).where(eq(activationRequests.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getActivationRequestsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(activationRequests).where(eq(activationRequests.userId, userId)).orderBy(desc(activationRequests.createdAt));
+}
+
+export async function getAllActivationRequests(status?: "pending" | "activated" | "rejected") {
+  const db = await getDb();
+  if (!db) return [];
+  if (status) {
+    return db.select().from(activationRequests).where(eq(activationRequests.status, status)).orderBy(desc(activationRequests.createdAt));
+  }
+  return db.select().from(activationRequests).orderBy(desc(activationRequests.createdAt));
+}
+
+export async function updateActivationRequest(id: number, data: Partial<InsertActivationRequest>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(activationRequests).set({ ...data, updatedAt: new Date() }).where(eq(activationRequests.id, id));
+}
+
+// ============ DASHBOARD MESSAGES ============
+export async function createDashboardMessage(message: InsertDashboardMessage) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.insert(dashboardMessages).values(message).returning({ id: dashboardMessages.id });
+  return result[0]?.id ?? null;
+}
+
+export async function updateDashboardMessage(id: number, data: Partial<InsertDashboardMessage>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(dashboardMessages).set({ ...data, updatedAt: new Date() }).where(eq(dashboardMessages.id, id));
+}
+
+export async function deleteDashboardMessage(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(dashboardMessages).where(eq(dashboardMessages.id, id));
+}
+
+export async function getAllDashboardMessages() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(dashboardMessages).orderBy(desc(dashboardMessages.createdAt));
+}
+
+// Active messages for a user: global (userId null) or targeted, excluding dismissed ones
+export async function getDashboardMessagesForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const messages = await db.select().from(dashboardMessages)
+    .where(and(
+      eq(dashboardMessages.isActive, true),
+      or(isNull(dashboardMessages.userId), eq(dashboardMessages.userId, userId))
+    ))
+    .orderBy(desc(dashboardMessages.createdAt));
+
+  if (messages.length === 0) return [];
+
+  const dismissals = await db.select({ messageId: dashboardMessageDismissals.messageId })
+    .from(dashboardMessageDismissals)
+    .where(eq(dashboardMessageDismissals.userId, userId));
+  const dismissedIds = new Set(dismissals.map(d => d.messageId));
+
+  return messages.filter(m => !dismissedIds.has(m.id));
+}
+
+export async function dismissDashboardMessage(messageId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  // Avoid duplicate dismissal rows
+  const existing = await db.select({ id: dashboardMessageDismissals.id })
+    .from(dashboardMessageDismissals)
+    .where(and(
+      eq(dashboardMessageDismissals.messageId, messageId),
+      eq(dashboardMessageDismissals.userId, userId)
+    ))
+    .limit(1);
+  if (existing.length > 0) return;
+  await db.insert(dashboardMessageDismissals).values({ messageId, userId });
 }
