@@ -1,5 +1,5 @@
 import { supabaseClient, supabaseAdmin } from './supabase';
-import { sendOTPEmail, sendWelcomeEmail } from './mailtrap';
+import { sendOTPEmail, sendWelcomeEmail } from './brevo';
 
 /**
  * Generate a 6-digit OTP code

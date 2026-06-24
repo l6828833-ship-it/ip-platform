@@ -302,6 +302,49 @@ export async function sendOTPEmail(
 }
 
 /* =======================
+   WELCOME EMAIL
+======================= */
+export async function sendWelcomeEmail(
+  email: string,
+  userName: string
+): Promise<{ success: boolean; error?: string }> {
+  console.log('========================================');
+  console.log('📧 SEND WELCOME EMAIL');
+  console.log('   Email:', email);
+  console.log('========================================');
+
+  try {
+    const content = `
+      <h2 style="color:#1e293b">Welcome to IPTV Premium! 🎉</h2>
+      <p style="color:#475569">
+        Hi <strong>${userName}</strong>, thanks for joining IPTV Premium!
+      </p>
+      <p style="color:#475569">
+        Your account is ready. Browse our plans and get instant access to premium entertainment.
+      </p>
+    `;
+
+    const result = await sendEmail(
+      email,
+      'Welcome to IPTV Premium! 🎉',
+      emailTemplate(content),
+      []
+    );
+
+    if (!result.success) {
+      console.error('❌ sendWelcomeEmail failed:', result.error);
+      throw new Error(result.error);
+    }
+
+    console.log('✅ Welcome email sent successfully to:', email);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ sendWelcomeEmail exception:', error);
+    return { success: false, error: error?.message || 'Failed to send welcome email' };
+  }
+}
+
+/* =======================
    ORDER CONFIRMATION
 ======================= */
 export async function sendOrderConfirmationEmail(params: {
