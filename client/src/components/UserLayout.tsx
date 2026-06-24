@@ -8,24 +8,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
-import { 
-  Tv, 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Key, 
+import { useIsMobile } from "@/hooks/useMobile";
+import {
+  Tv,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
   MessageCircle,
   User,
   LogOut,
-  Menu,
   Moon,
   Sun,
-  Shield
+  Shield,
+  PanelLeft,
 } from "lucide-react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
 
 const userMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -34,102 +46,185 @@ const userMenuItems = [
   { icon: MessageCircle, label: "Support Chat", path: "/chat" },
 ];
 
+const SIDEBAR_WIDTH_KEY = "user-sidebar-width";
+const DEFAULT_WIDTH = 260;
+const MIN_WIDTH = 200;
+const MAX_WIDTH = 400;
+
 export default function UserLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  return (
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": `${sidebarWidth}px`,
+        } as CSSProperties
+      }
+    >
+      <UserLayoutContent setSidebarWidth={setSidebarWidth}>
+        {children}
+      </UserLayoutContent>
+    </SidebarProvider>
+  );
+}
+
+type UserLayoutContentProps = {
+  children: React.ReactNode;
+  setSidebarWidth: (width: number) => void;
+};
+
+function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [location] = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+  const [location, setLocation] = useLocation();
+  const { state, toggleSidebar } = useSidebar();
+  const isCollapsed = state === "collapsed";
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const activeMenuItem = userMenuItems.find(item => item.path === location);
+  const isMobile = useIsMobile();
+
   const isAdmin = user?.role === "admin" || user?.role === "agent";
-  
+
+  useEffect(() => {
+    if (isCollapsed) {
+      setIsResizing(false);
+    }
+  }, [isCollapsed]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const sidebarLeft = sidebarRef.current?.getBoundingClientRect().left ?? 0;
+      const newWidth = e.clientX - sidebarLeft;
+      if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isResizing, setSidebarWidth]);
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg gradient-primary">
-              <Tv className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-semibold text-lg hidden sm:inline">IPTV Premium</span>
-          </Link>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            {userMenuItems.map((item) => {
-              const isActive = location === item.path;
-              return (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    size="sm"
-                    className={`gap-2 ${isActive ? "bg-primary/10 text-primary" : ""}`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Button>
+    <>
+      <div className="relative" ref={sidebarRef}>
+        <Sidebar collapsible="icon" className="border-r-0" disableTransition={isResizing}>
+          <SidebarHeader className="h-16 justify-center">
+            <div className="flex items-center gap-3 px-2 transition-all w-full">
+              <button
+                onClick={toggleSidebar}
+                className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
+                aria-label="Toggle navigation"
+              >
+                <PanelLeft className="h-4 w-4 text-muted-foreground" />
+              </button>
+              {!isCollapsed && (
+                <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg gradient-primary shrink-0">
+                    <Tv className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="font-semibold tracking-tight truncate">
+                    IPTV Premium
+                  </span>
                 </Link>
-              );
-            })}
-          </nav>
-          
-          {/* Right side actions */}
-          <div className="flex items-center gap-2">
-            {/* Theme toggle */}
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="hidden sm:flex">
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            
-            {/* Admin link */}
-            {isAdmin && (
-              <Link href="/admin">
-                <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
-                  <Shield className="h-4 w-4" />
-                  Admin
-                </Button>
-              </Link>
-            )}
-            
-            {/* User dropdown */}
+              )}
+            </div>
+          </SidebarHeader>
+
+          <SidebarContent className="gap-0">
+            <SidebarMenu className="px-2 py-1">
+              {userMenuItems.map(item => {
+                const isActive = location === item.path;
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      onClick={() => setLocation(item.path)}
+                      tooltip={item.label}
+                      className="h-10 transition-all font-normal"
+                    >
+                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+
+              {isAdmin && (
+                <>
+                  <div className="my-2 border-t" />
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={location.startsWith("/admin")}
+                      onClick={() => setLocation("/admin")}
+                      tooltip="Admin"
+                      className="h-10 transition-all font-normal"
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span>Admin</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
+            </SidebarMenu>
+          </SidebarContent>
+
+          <SidebarFooter className="p-3">
+            <div className="flex items-center justify-between mb-2 group-data-[collapsible=icon]:hidden">
+              <Button variant="ghost" size="sm" onClick={toggleTheme}>
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary/10 text-primary">
+                <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <Avatar className="h-9 w-9 border shrink-0">
+                    <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
                       {user?.name?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                </Button>
+                  <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+                    <p className="text-sm font-medium truncate leading-none">
+                      {user?.name || "User"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate mt-1.5">
+                      {user?.email || "-"}
+                    </p>
+                  </div>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <div className="flex items-center gap-2 p-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                      {user?.name?.charAt(0).toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">{user?.name || "User"}</span>
-                    <span className="text-xs text-muted-foreground">{user?.email}</span>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
                 <Link href="/profile">
                   <DropdownMenuItem className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </DropdownMenuItem>
                 </Link>
-                {isAdmin && (
-                  <Link href="/admin">
-                    <DropdownMenuItem className="cursor-pointer sm:hidden">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                  </Link>
-                )}
-                <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer sm:hidden">
+                <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer">
                   {theme === "dark" ? (
                     <>
                       <Sun className="mr-2 h-4 w-4" />
@@ -143,66 +238,57 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={logout} 
+                <DropdownMenuItem
+                  onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
+                  <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            
-            {/* Mobile menu */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72">
-                <div className="flex flex-col gap-4 mt-8">
-                  {userMenuItems.map((item) => {
-                    const isActive = location === item.path;
-                    return (
-                      <Link 
-                        key={item.path} 
-                        href={item.path}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Button
-                          variant={isActive ? "secondary" : "ghost"}
-                          className={`w-full justify-start gap-3 ${isActive ? "bg-primary/10 text-primary" : ""}`}
-                        >
-                          <item.icon className="h-5 w-5" />
-                          {item.label}
-                        </Button>
-                      </Link>
-                    );
-                  })}
+          </SidebarFooter>
+        </Sidebar>
+        <div
+          className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
+          onMouseDown={() => {
+            if (isCollapsed) return;
+            setIsResizing(true);
+          }}
+          style={{ zIndex: 50 }}
+        />
+      </div>
+
+      <SidebarInset>
+        {isMobile && (
+          <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-7 h-7 rounded-lg gradient-primary">
+                  <Tv className="h-4 w-4 text-white" />
                 </div>
-              </SheetContent>
-            </Sheet>
+                <span className="tracking-tight text-foreground">
+                  {activeMenuItem?.label ?? "IPTV Premium"}
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </header>
-      
-      {/* Main content */}
-      <main className="container py-6">
-        {children}
-      </main>
-      
+        )}
+        <main className="flex-1 p-4 md:p-6">{children}</main>
+      </SidebarInset>
+
       {/* Chat FAB */}
       {location !== "/chat" && (
         <Link href="/chat">
           <Button
             size="lg"
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90 transition-opacity"
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90 transition-opacity z-50"
           >
             <MessageCircle className="h-6 w-6" />
           </Button>
         </Link>
       )}
-    </div>
+    </>
   );
 }
