@@ -12,7 +12,8 @@ import {
   Zap,
   Globe,
   Clock,
-  Users
+  Users,
+  Coins
 } from "lucide-react";
 
 export default function Plans() {
@@ -22,6 +23,12 @@ export default function Plans() {
   const getPrice = (plan: NonNullable<typeof plans>[0], connections: number) => {
     const pricing = plan.pricing?.find(p => p.connections === connections);
     return pricing?.price || "0.00";
+  };
+
+  const getPoints = (plan: NonNullable<typeof plans>[0], connections: number) => {
+    const tier = plan.pricing?.find(p => p.connections === connections);
+    const tierPoints = (tier as { points?: number } | undefined)?.points ?? 0;
+    return tierPoints > 0 ? tierPoints : ((plan as { activationPoints?: number }).activationPoints ?? 0);
   };
   
   const getConnections = (planId: number, maxConnections: number) => {
@@ -109,6 +116,7 @@ export default function Plans() {
             {plans.map((plan, index) => {
               const connections = getConnections(plan.id, plan.maxConnections);
               const price = getPrice(plan, connections);
+              const points = getPoints(plan, connections);
               const isPopular = index === 1;
               
               return (
@@ -174,6 +182,14 @@ export default function Plans() {
                         <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                         <span>{plan.durationDays} days validity</span>
                       </div>
+                      {points > 0 && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Coins className="h-4 w-4 text-amber-500 shrink-0" />
+                          <span>
+                            <strong>{points}</strong> activation {points === 1 ? "point" : "points"} for {connections} {connections === 1 ? "connection" : "connections"}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                   
