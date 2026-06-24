@@ -45,7 +45,6 @@ export default function Dashboard() {
   const activationPoints = pointsData?.points ?? 0;
   
   const pendingOrders = orders?.filter(o => o.status === "pending").length || 0;
-  const verifiedOrders = orders?.filter(o => o.status === "verified").length || 0;
   const activeCredentials = credentials?.filter(c => c.isActive).length || 0;
   const expiredCredentials = credentials?.filter(c => !c.isActive).length || 0;
   
@@ -324,7 +323,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Cards - Important Stats Only */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -372,21 +371,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
           
-          <Card className="card-hover">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Verified Orders
-              </CardTitle>
-              <CheckCircle className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{verifiedOrders}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                completed purchases
-              </p>
-            </CardContent>
-          </Card>
-
           <Card className="card-hover">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

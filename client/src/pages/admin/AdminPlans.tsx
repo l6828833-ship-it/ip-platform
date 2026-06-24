@@ -373,33 +373,41 @@ export default function AdminPlans() {
               {/* Pricing Grid */}
               <div className="space-y-3">
                 <Label>Pricing &amp; Points per Connection</Label>
-                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {planForm.pricing.map((p, i) => (
-                    <div key={i} className="space-y-1 rounded-lg border p-2">
-                      <Label className="text-xs text-muted-foreground">
-                        {p.connections} {p.connections === 1 ? "conn." : "conns"}
-                      </Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={p.price}
-                          onChange={(e) => updatePricing(i, e.target.value)}
-                          placeholder="0.00"
-                          className="pl-7"
-                        />
+                    <div key={i} className="rounded-lg border p-3">
+                      <div className="text-sm font-medium mb-2">
+                        {p.connections} {p.connections === 1 ? "connection" : "connections"}
                       </div>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min="0"
-                          value={p.points}
-                          onChange={(e) => updatePricingPoints(i, parseInt(e.target.value) || 0)}
-                          placeholder="0"
-                          className="pr-9"
-                        />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">pts</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Price</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={p.price}
+                              onChange={(e) => updatePricing(i, e.target.value)}
+                              placeholder="0.00"
+                              className="pl-7"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">Points</Label>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min="0"
+                              value={p.points}
+                              onChange={(e) => updatePricingPoints(i, parseInt(e.target.value) || 0)}
+                              placeholder="0"
+                              className="pr-10"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">pts</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
