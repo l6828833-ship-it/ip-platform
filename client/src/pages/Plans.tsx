@@ -13,12 +13,15 @@ import {
   Globe,
   Clock,
   Users,
-  Coins
+  Coins,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 
 export default function Plans() {
   const { data: plans, isLoading } = trpc.plans.list.useQuery({ activeOnly: true });
   const [selectedConnections, setSelectedConnections] = useState<Record<number, number>>({});
+  const [expandedPlans, setExpandedPlans] = useState<Record<number, boolean>>({});
   
   const getPrice = (plan: NonNullable<typeof plans>[0], connections: number) => {
     const pricing = plan.pricing?.find(p => p.connections === connections);
@@ -118,6 +121,9 @@ export default function Plans() {
               const price = getPrice(plan, connections);
               const points = getPoints(plan, connections);
               const isPopular = plan.promoText ? true : index === 1;
+              const allFeatures = (plan.features as string[]) || [];
+              const isExpanded = !!expandedPlans[plan.id];
+              const visibleFeatures = isExpanded ? allFeatures : allFeatures.slice(0, 6);
               
               return (
                 <Card 
@@ -168,13 +174,32 @@ export default function Plans() {
                     
                     {/* Features */}
                     <div className="space-y-2">
-                      {(plan.features as string[] || []).map((feature, i) => (
+                      {visibleFeatures.map((feature, i) => (
                         <div key={i} className="flex items-center gap-2 text-sm">
                           <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                           <span>{feature}</span>
                         </div>
                       ))}
-                      <div className="flex items-center gap-2 text-sm">
+                      {allFeatures.length > 6 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedPlans(prev => ({ ...prev, [plan.id]: !isExpanded }))}
+                          className="flex items-center gap-1 text-sm text-primary hover:underline pt-1"
+                        >
+                          {isExpanded ? (
+                            <>
+                              Show less
+                              <ChevronUp className="h-4 w-4" />
+                            </>
+                          ) : (
+                            <>
+                              Show all features ({allFeatures.length})
+                              <ChevronDown className="h-4 w-4" />
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <div className="flex items-center gap-2 text-sm pt-1">
                         <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                         <span>{connections} simultaneous {connections === 1 ? "device" : "devices"}</span>
                       </div>
