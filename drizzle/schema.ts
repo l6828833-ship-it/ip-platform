@@ -41,6 +41,7 @@ export const planPricing = pgTable("planPricing", {
   planId: integer("planId").notNull(),
   connections: integer("connections").notNull(),
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  points: integer("points").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
