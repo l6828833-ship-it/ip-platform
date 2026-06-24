@@ -363,10 +363,13 @@ export default function AdminCredentials() {
                   <Input
                     type="number"
                     min={1}
-                    max={10}
+                    max={100}
                     value={credentialForm.connectionNumber}
                     onChange={(e) => setCredentialForm(prev => ({ ...prev, connectionNumber: parseInt(e.target.value) || 1 }))}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Controls the order shown to the user (Connection 1, 2, 3...). Keep these unique per user.
+                  </p>
                 </div>
                 
                 <div className="space-y-2">

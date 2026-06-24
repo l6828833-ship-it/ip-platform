@@ -53,6 +53,10 @@ export default function Dashboard() {
   const expiredCredentialsList = (credentials?.filter(c => !c.isActive) || [])
     .slice()
     .sort((a, b) => a.connectionNumber - b.connectionNumber);
+
+  // A connection is highlighted "new" for 24h after it's assigned
+  const isNewCredential = (c: NonNullable<typeof credentials>[0]) =>
+    Date.now() - new Date(c.createdAt).getTime() < 24 * 60 * 60 * 1000;
   
   const recentOrders = orders?.slice(0, 3) || [];
   
@@ -523,12 +527,24 @@ export default function Dashboard() {
                 ) : (
                   <Tabs defaultValue={String(activeCredentialsList[0]?.id)} className="w-full">
                     <TabsList className="flex flex-wrap h-auto justify-start gap-1">
-                      {activeCredentialsList.map(cred => (
-                        <TabsTrigger key={cred.id} value={String(cred.id)} className="gap-1">
-                          <Key className="h-3.5 w-3.5" />
-                          Connection {cred.connectionNumber}
-                        </TabsTrigger>
-                      ))}
+                      {activeCredentialsList.map(cred => {
+                        const isNew = isNewCredential(cred);
+                        return (
+                          <TabsTrigger
+                            key={cred.id}
+                            value={String(cred.id)}
+                            className={`gap-1.5 ${isNew ? "text-emerald-600 dark:text-emerald-400" : ""}`}
+                          >
+                            <Key className="h-3.5 w-3.5" />
+                            Connection {cred.connectionNumber}
+                            {isNew && (
+                              <span className="ml-1 inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 text-[10px] font-semibold">
+                                New
+                              </span>
+                            )}
+                          </TabsTrigger>
+                        );
+                      })}
                     </TabsList>
                     {activeCredentialsList.map(cred => (
                       <TabsContent key={cred.id} value={String(cred.id)} className="mt-4">
