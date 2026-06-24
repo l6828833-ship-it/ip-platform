@@ -316,6 +316,12 @@ export default function AdminPaymentMethods() {
                     <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
+                {methodForm.type === "crypto" && (
+                  <p className="text-xs text-muted-foreground">
+                    Crypto is processed automatically via Cryptomus. Requires CRYPTOMUS_MERCHANT_ID,
+                    CRYPTOMUS_API_KEY and APP_URL env vars. Instructions/payment link are ignored.
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">
