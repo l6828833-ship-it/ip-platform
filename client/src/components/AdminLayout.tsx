@@ -43,7 +43,8 @@ import {
   Shield,
   AppWindow,
   Zap,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -60,7 +61,8 @@ const adminMenuItems = [
   { icon: AppWindow, label: "Apps", path: "/admin/apps" },
   { icon: Zap, label: "Activations", path: "/admin/activations" },
   { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
-  { icon: MessageCircle, label: "Chat", path: "/admin/chat" },
+  { icon: MessageCircle, label: "Support Tickets", path: "/admin/chat" },
+  { icon: Sparkles, label: "AI Chat", path: "/admin/ai-settings" },
   { icon: FileText, label: "Activity Logs", path: "/admin/logs" },
   { icon: Mail, label: "Email Templates", path: "/admin/email-templates" },
   { icon: Settings, label: "Email Settings", path: "/admin/email-settings" },

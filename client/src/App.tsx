@@ -13,6 +13,7 @@ import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Chat from "./pages/Chat";
+import AIChat from "./pages/AIChat";
 import Profile from "./pages/Profile";
 
 // Public Pages (no auth required)
@@ -31,6 +32,7 @@ import AdminLogs from "./pages/admin/AdminLogs";
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 import AdminCredentials from "./pages/admin/AdminCredentials";
 import AdminEmailSettings from "./pages/admin/AdminEmailSettings";
+import AdminAISettings from "./pages/admin/AdminAISettings";
 import AdminApps from "./pages/admin/AdminApps";
 import AdminActivations from "./pages/admin/AdminActivations";
 import AdminMessages from "./pages/admin/AdminMessages";
@@ -127,6 +129,9 @@ function Router() {
       <Route path="/chat">
         {() => <ProtectedRoute component={Chat} />}
       </Route>
+      <Route path="/ai-chat">
+        {() => <ProtectedRoute component={AIChat} />}
+      </Route>
       <Route path="/apps">
         {() => <ProtectedRoute component={Apps} />}
       </Route>
@@ -179,6 +184,9 @@ function Router() {
       </Route>
       <Route path="/admin/email-settings">
         {() => <AdminRoute component={AdminEmailSettings} />}
+      </Route>
+      <Route path="/admin/ai-settings">
+        {() => <AdminRoute component={AdminAISettings} />}
       </Route>
       
       {/* 404 */}

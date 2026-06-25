@@ -17,4 +17,9 @@ export const ENV = {
   nowpaymentsIpnSecret: process.env.NOWPAYMENTS_IPN_SECRET ?? "",
   // Public base URL of the app (used for payment callback/return URLs)
   appUrl: process.env.VITE_APP_URL ?? process.env.APP_URL ?? "",
+  // AI assistant configuration (OpenAI-compatible). Enable/disable + prompt
+  // are controlled by the admin from the dashboard (stored in site settings).
+  forgeApiKey: process.env.OPENAI_API_KEY ?? "",
+  forgeApiUrl: process.env.OPENAI_API_URL ?? "",
+  aiModel: process.env.AI_MODEL ?? "gpt-4o-mini",
 };

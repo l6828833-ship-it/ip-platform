@@ -5,6 +5,8 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
+import { ENV } from "./_core/env";
+import { invokeLLM } from "./_core/llm";
 import { sendOrderConfirmationEmail, sendCredentialsEmail, sendPaymentVerificationEmail, sendNewChatMessageEmail, sendAdminNewOrderEmail, sendTestEmail, sendOrderRejectionEmail, sendWelcomeEmail } from "./mailtrap";
 import { runEmailDiagnostic } from "./emailDiagnostic";
 import {
@@ -29,6 +31,13 @@ const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+const DEFAULT_AI_CHAT_PROMPT = `You are a friendly customer support assistant for an IPTV subscription service.
+Be warm, concise, and professional. Reply in the same language the customer writes in.
+You can help with general questions about subscription plans, number of connections, supported devices (Smart TV, Android, iOS, Windows, MAG, etc.), how to pay (including crypto), and how activation points work.
+Do NOT invent order numbers, passwords, account credentials, exact prices, or promises about refunds.
+For anything that needs account access, payment verification, refunds, or changing an existing order, tell the customer to open a Support Ticket so a human agent can help.
+Keep answers short (1-4 sentences) unless the customer asks for detailed steps.`;
 
 export const appRouter = router({
   system: systemRouter,
@@ -857,12 +866,67 @@ export const appRouter = router({
       }),
   }),
 
+  // ============ AI ASSISTANT (chat) ============
+  ai: router({
+    // Lightweight config the user chat page can read (no admin role required).
+    config: protectedProcedure.query(async () => {
+      const setting = await db.getSetting("ai_chat_enabled");
+      const enabled = setting?.value === "true";
+      return { enabled: enabled && Boolean(ENV.forgeApiKey) };
+    }),
+
+    // Generate an AI reply. Stateless: the client sends the running message
+    // history and we return the assistant's text. Only the AI replies here.
+    chat: protectedProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.enum(["system", "user", "assistant"]),
+          content: z.string(),
+        })).min(1).max(50),
+      }))
+      .mutation(async ({ input }) => {
+        const setting = await db.getSetting("ai_chat_enabled");
+        if (setting?.value !== "true") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "The AI assistant is currently disabled." });
+        }
+        if (!ENV.forgeApiKey) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The AI assistant is not configured yet." });
+        }
+
+        const promptSetting = await db.getSetting("ai_chat_prompt");
+        const systemPrompt =
+          promptSetting?.value && promptSetting.value.trim().length > 0
+            ? promptSetting.value
+            : DEFAULT_AI_CHAT_PROMPT;
+
+        // Ignore any client-supplied system messages; we control the persona.
+        const userMessages = input.messages
+          .filter(m => m.role !== "system")
+          .slice(-30);
+
+        const result = await invokeLLM({
+          messages: [{ role: "system", content: systemPrompt }, ...userMessages],
+          maxTokens: 800,
+        });
+
+        const content = result.choices?.[0]?.message?.content;
+        const text =
+          typeof content === "string"
+            ? content
+            : Array.isArray(content)
+              ? content.map(p => ("text" in p ? p.text : "")).join("")
+              : "";
+
+        return { content: text.trim() || "Sorry, I couldn't generate a response. Please try again." };
+      }),
+  }),
+
   // ============ SITE SETTINGS ============
   settings: router({
     list: adminProcedure.query(async () => {
       return db.getAllSettings();
     }),
-    
+
     get: adminProcedure
       .input(z.object({ key: z.string() }))
       .query(async ({ input }) => {
