@@ -700,7 +700,7 @@ const css = `
 
 .lp .features { padding:100px 0; background:var(--bg-soft); }
 .lp .features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
-.lp .feature-card { background:#fff; border:1px solid rgba(37,99,235,.12); border-radius:var(--radius); padding:32px 28px; transition:transform .3s,box-shadow .3s,border-color .3s; }
+.lp .feature-card { background:#fff; border:1px solid rgba(37,99,235,.12); border-radius:var(--radius); padding:32px 28px; box-shadow:0 12px 32px -22px rgba(10,22,40,.28); transition:transform .3s,box-shadow .3s,border-color .3s; }
 .lp .feature-card:hover { transform:translateY(-8px); box-shadow:var(--shadow); border-color:rgba(37,99,235,.4); }
 .lp .feature-ic { width:58px; height:58px; border-radius:16px; display:grid; place-items:center; font-size:1.7rem; background:var(--gradient-primary); color:#fff; box-shadow:var(--shadow-glow); margin-bottom:18px; }
 .lp .feature-card h3 { font-size:1.22rem; font-weight:700; margin:0 0 8px; }
@@ -737,6 +737,12 @@ const css = `
 .lp .plan li .ck { color:var(--blue-600); font-weight:800; }
 .lp .plan .btn { margin-top:auto; }
 .lp .pl-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; align-items:stretch; }
+/* Force a clear, premium card look on the shadcn pricing cards (they were white-on-white) */
+.lp .pl-grid [data-slot="card"] { background:#fff; border:1px solid rgba(37,99,235,.16); border-radius:18px; box-shadow:0 14px 36px -20px rgba(10,22,40,.30); transition:transform .3s, box-shadow .3s; }
+.lp .pl-grid [data-slot="card"]:hover { transform:translateY(-6px); box-shadow:0 22px 52px -22px rgba(10,22,40,.36); }
+.lp .pl-grid [data-slot="card"][class*="border-primary"] { border:2px solid var(--blue-600); box-shadow:0 18px 46px -18px rgba(37,99,235,.45); }
+.lp .pl-grid [data-slot="card-footer"] > a { display:block; width:100%; }
+.lp .pl-grid [data-slot="card-footer"] button { width:100%; height:auto; padding:13px 20px; font-weight:600; border-radius:10px; }
 
 .lp .channels { padding:100px 0; background:var(--bg-soft); }
 .lp .count-row { display:flex; justify-content:center; gap:50px; flex-wrap:wrap; margin-bottom:50px; }
