@@ -35,17 +35,16 @@ import {
   Shield,
   PanelLeft,
   AppWindow,
-  Sparkles,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
+import AIChatWidget from "@/components/AIChatWidget";
 
 const userMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Package, label: "Plans", path: "/plans" },
   { icon: AppWindow, label: "Activation Apps", path: "/apps" },
   { icon: ShoppingCart, label: "My Orders", path: "/orders" },
-  { icon: Sparkles, label: "Chat", path: "/ai-chat" },
   { icon: MessageCircle, label: "Support Ticket", path: "/chat" },
 ];
 
@@ -282,17 +281,8 @@ function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
 
-      {/* AI Chat FAB */}
-      {location !== "/ai-chat" && (
-        <Link href="/ai-chat">
-          <Button
-            size="lg"
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90 transition-opacity z-50"
-          >
-            <Sparkles className="h-6 w-6" />
-          </Button>
-        </Link>
-      )}
+      {/* AI Chat popup widget (only shows when admin enabled the assistant) */}
+      <AIChatWidget />
     </>
   );
 }
