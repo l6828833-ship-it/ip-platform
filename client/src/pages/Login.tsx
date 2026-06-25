@@ -51,7 +51,7 @@ export default function Login() {
       }
 
       // Success - reload to get authenticated state
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err) {
       setError("An error occurred. Please try again.");
     } finally {
