@@ -1,4 +1,5 @@
 import UserLayout from "@/components/UserLayout";
+import OnboardingTour from "@/components/OnboardingTour";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -251,6 +252,7 @@ export default function Dashboard() {
   
   return (
     <UserLayout>
+      <OnboardingTour />
       <div className="space-y-6">
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

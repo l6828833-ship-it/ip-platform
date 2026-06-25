@@ -237,6 +237,9 @@ export default function LandingHome() {
             <div className="step reveal d2"><div className="step-num">2</div><div className="step-ic">💳</div><h3>Complete Payment</h3><p>Pay instantly with crypto, or use card / PayPal verified quickly by our support team.</p></div>
             <div className="step reveal d3"><div className="step-num">3</div><div className="step-ic">🚀</div><h3>Start Watching</h3><p>Receive your credentials on your dashboard and start streaming instantly on any device.</p></div>
           </div>
+          <div className="reveal" style={{ textAlign: "center", marginTop: "44px" }}>
+            <a href="#pricing" className="btn btn-primary btn-lg">See Plans &amp; Pricing</a>
+          </div>
         </div>
       </section>
 
@@ -476,6 +479,20 @@ export default function LandingHome() {
         </div>
       </section>
 
+      {/* FINAL CTA BAND */}
+      <section className="cta-band">
+        <div className="container">
+          <div className="cta-inner reveal">
+            <h2>Ready to start watching?</h2>
+            <p>Join thousands of happy viewers. Set up in minutes, cancel anytime.</p>
+            <div className="cta-band-btns">
+              <Link href={primaryHref} className="btn btn-light btn-lg">▶ {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}</Link>
+              <a href="#pricing" className="btn btn-ghost-light btn-lg">View Plans</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="footer">
         <div className="container">
@@ -512,7 +529,7 @@ const css = `
 .lp { --white:#fff; --blue-950:#0A1628; --blue-800:#1E3A8A; --blue-600:#2563EB; --blue-400:#60A5FA; --blue-300:#93C5FD;
   --text:#0A1628; --text-muted:#5b6b85; --bg:#ffffff; --bg-soft:#f4f7fe;
   --radius:18px; --radius-sm:12px; --shadow:0 20px 50px -20px rgba(10,22,40,.30); --shadow-glow:0 12px 40px -8px rgba(37,99,235,.45);
-  --gradient-primary:linear-gradient(135deg,#2563EB 0%,#1E3A8A 100%); --nav-h:72px;
+  --gradient-primary:linear-gradient(135deg,#2563EB 0%,#1E3A8A 100%); --nav-h:88px;
   font-family:'Inter',system-ui,sans-serif; color:var(--text); background:var(--bg); line-height:1.6; }
 .lp * { box-sizing:border-box; }
 .lp h1,.lp h2,.lp h3 { font-family:'Poppins','Inter',sans-serif; line-height:1.15; }
@@ -531,6 +548,15 @@ const css = `
 .lp .btn-primary:hover { transform:translateY(-3px); box-shadow:0 16px 38px -8px rgba(37,99,235,.95); }
 .lp .btn-outline { background:#fff; color:var(--blue-800); border:1.5px solid rgba(37,99,235,.3); }
 .lp .btn-outline:hover { transform:translateY(-3px); background:rgba(37,99,235,.06); }
+.lp .btn-light { background:#fff; color:var(--blue-800); }
+.lp .btn-light:hover { transform:translateY(-3px); box-shadow:0 16px 38px -10px rgba(0,0,0,.4); }
+.lp .btn-ghost-light { background:rgba(255,255,255,.12); color:#fff; border:1.5px solid rgba(255,255,255,.55); }
+.lp .btn-ghost-light:hover { transform:translateY(-3px); background:rgba(255,255,255,.22); }
+.lp .cta-band { padding:84px 0; background:var(--gradient-primary); color:#fff; }
+.lp .cta-inner { text-align:center; max-width:640px; margin:0 auto; }
+.lp .cta-inner h2 { font-size:clamp(1.8rem,4vw,2.6rem); font-weight:800; margin:0 0 12px; color:#fff; }
+.lp .cta-inner p { color:rgba(255,255,255,.92); font-size:1.05rem; margin:0 0 26px; }
+.lp .cta-band-btns { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
 .lp .btn-lg { padding:16px 32px; font-size:1.05rem; }
 
 .lp .navbar { position:fixed; top:0; left:0; right:0; z-index:1000; height:var(--nav-h); display:flex; align-items:center; transition:background .35s,box-shadow .35s; background:transparent; }
@@ -539,7 +565,7 @@ const css = `
 .lp .logo { display:flex; align-items:center; gap:10px; font-family:'Poppins'; font-weight:800; font-size:1.3rem; color:var(--blue-950); }
 .lp .logo-mark { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; background:var(--gradient-primary); box-shadow:var(--shadow-glow); font-size:1.1rem; }
 .lp .logo span { color:var(--blue-600); }
-.lp .logo-img { height:44px; width:auto; display:block; }
+.lp .logo-img { height:60px; width:auto; display:block; }
 .lp .nav-links { display:flex; align-items:center; gap:32px; }
 .lp .nav-links a { color:#2b3a55; font-weight:500; font-size:.98rem; transition:color .2s; }
 .lp .nav-links a:hover { color:var(--blue-600); }
