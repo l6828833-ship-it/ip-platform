@@ -341,7 +341,7 @@ export default function LandingHome() {
                 const hiddenCount = allFeatures.length - FEATURES_PREVIEW_COUNT;
 
                 return (
-                  <Card key={plan.id} className={`relative ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}>
+                  <Card key={plan.id} className={`relative h-full flex flex-col ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}>
                     {plan.promoText && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                         <Badge className="bg-red-500 hover:bg-red-600 text-white">{plan.promoText}</Badge>
@@ -352,7 +352,7 @@ export default function LandingHome() {
                       <CardDescription>{plan.description}</CardDescription>
                     </CardHeader>
 
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-6 flex-1">
                       <div className="text-center">
                         <div className="flex items-baseline justify-center gap-1">
                           <span className="text-4xl font-bold">${price}</span>
@@ -736,7 +736,7 @@ const css = `
 .lp .plan li { display:flex; gap:9px; font-size:.92rem; color:#2b3a55; }
 .lp .plan li .ck { color:var(--blue-600); font-weight:800; }
 .lp .plan .btn { margin-top:auto; }
-.lp .pl-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; align-items:start; }
+.lp .pl-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; align-items:stretch; }
 
 .lp .channels { padding:100px 0; background:var(--bg-soft); }
 .lp .count-row { display:flex; justify-content:center; gap:50px; flex-wrap:wrap; margin-bottom:50px; }
@@ -794,7 +794,9 @@ const css = `
 
 /* Trust strip */
 .lp .trust-strip { background:#fff; border-bottom:1px solid rgba(37,99,235,.08); }
-.lp .trust-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px 28px; padding:18px 22px; color:#475569; font-weight:600; font-size:.9rem; }
+.lp .trust-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; padding:24px 22px; }
+.lp .trust-row span { display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid rgba(37,99,235,.16); border-radius:999px; padding:10px 18px; color:var(--blue-950); font-weight:600; font-size:.9rem; box-shadow:0 6px 18px -10px rgba(10,22,40,.3); transition:transform .2s, box-shadow .2s; }
+.lp .trust-row span:hover { transform:translateY(-2px); box-shadow:0 10px 22px -10px rgba(37,99,235,.4); }
 
 /* Benefits */
 .lp .benefits-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
