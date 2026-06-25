@@ -56,12 +56,19 @@ const FAQS = [
 ];
 
 const FEATURES = [
-  { ic: "📡", t: "50,000+ Live Channels", d: "Worldwide live TV across every category, streaming around the clock with daily updates." },
-  { ic: "🎬", t: "HD & 4K Quality", d: "Razor-sharp 4K Ultra HD, HD and SD streams that adapt smoothly to your connection." },
-  { ic: "⚡", t: "99.9% Uptime", d: "Premium load-balanced servers keep your stream stable, even during peak sports events." },
-  { ic: "📱", t: "All Devices Supported", d: "Smart TV, Firestick, Android, iOS, MAG, Enigma2, PC and any Xtream Codes / M3U player." },
-  { ic: "🍿", t: "VOD Movies & Series", d: "200,000+ on-demand titles with synced watchlists and favorites across all your devices." },
-  { ic: "💬", t: "24/7 Support", d: "A real support team ready to help with setup, billing, or any question — day or night." },
+  { ic: "📡", t: "50,000+ Live Channels", d: "Live TV from around the world — sports, news, kids, movies and more — refreshed every day." },
+  { ic: "🎬", t: "True 4K & HD Quality", d: "Sharp 4K, HD and SD streams that adjust to your connection so the picture stays smooth." },
+  { ic: "⚡", t: "99.9% Uptime", d: "Load-balanced servers and anti-freeze delivery keep your stream steady, even on busy match nights." },
+  { ic: "📱", t: "Works on Every Device", d: "Use the apps you already have on Smart TV, Firestick, Android, iPhone, MAG, Enigma2 and PC." },
+  { ic: "🍿", t: "200,000+ Movies & Series", d: "A huge on-demand library with your watchlist and favorites synced across every screen." },
+  { ic: "💬", t: "24/7 Human Support", d: "A real team you can reach any time for setup, billing or a quick question." },
+];
+
+const BENEFITS = [
+  { t: "Spend less", d: "One IPTV subscription replaces a pricey cable bill and several streaming apps." },
+  { t: "Keep your devices", d: "No dish, no box. Our IPTV service runs on the hardware you already own." },
+  { t: "More to watch", d: "Live sports, PPV, worldwide channels and a deep movie library, all in one place." },
+  { t: "No lock-in", d: "Simple plans you can change anytime, plus a free trial so you never buy blind." },
 ];
 
 const DEVICES = [
@@ -179,9 +186,9 @@ export default function LandingHome() {
       <section className="hero" id="home">
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow reveal">⭐ Best IPTV Service 2026</span>
-            <h1 className="reveal d1">Watch Anything.<br /><span className="grad">Anywhere. Anytime.</span></h1>
-            <p className="lead reveal d2">Stream 50,000+ live channels and 200,000+ movies & series in crystal-clear 4K, HD & SD — on every device, with instant activation and a free premium player on yearly plans.</p>
+            <span className="eyebrow reveal">⭐ Best IPTV Service 2026 · Free 24-Hour Trial</span>
+            <h1 className="reveal d1">The Top IPTV Service.<br /><span className="grad">Watch More, Pay Less.</span></h1>
+            <p className="lead reveal d2">IPTV TOP gives you 50,000+ live channels and 200,000+ movies and series in 4K, HD and SD — on any device, with instant setup. Try our IPTV service free for 24 hours before you decide.</p>
             <div className="hero-ctas reveal d3">
               <Link href={primaryHref} className="btn btn-primary btn-lg">▶ Start Free Trial</Link>
               <a href="#pricing" className="btn btn-outline btn-lg">View Plans</a>
@@ -204,13 +211,24 @@ export default function LandingHome() {
         </div>
       </section>
 
+      {/* TRUST STRIP */}
+      <section className="trust-strip">
+        <div className="container trust-row">
+          <span>⭐ 4.9/5 average rating</span>
+          <span>🔒 Secure checkout</span>
+          <span>⚡ Instant activation</span>
+          <span>🛡 Anti-freeze servers</span>
+          <span>💬 24/7 support</span>
+        </div>
+      </section>
+
       {/* FEATURES */}
       <section className="features" id="features">
         <div className="container">
           <div className="section-head reveal">
             <span className="eyebrow">Why Choose Us</span>
-            <h2>Everything You Need to Stream</h2>
-            <p>A premium iptv service built for quality, reliability, and total device freedom.</p>
+            <h2>Everything You Want From a Top IPTV Service</h2>
+            <p>IPTV TOP is built for a clean picture, steady streams and the freedom to watch on any device.</p>
           </div>
           <div className="features-grid">
             {FEATURES.map((f, i) => (
@@ -220,6 +238,42 @@ export default function LandingHome() {
                 <p>{f.d}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFITS */}
+      <section className="how" id="benefits">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">Why Switch</span>
+            <h2>Why Viewers Move to IPTV TOP</h2>
+            <p>Most people switch for one reason: a better picture for less money. Here's what you get with our IPTV service.</p>
+          </div>
+          <div className="benefits-grid">
+            {BENEFITS.map((b, i) => (
+              <div className={`benefit reveal d${(i % 4) + 1}`} key={i}>
+                <h3>{b.t}</h3>
+                <p>{b.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SERVER STATISTICS */}
+      <section className="channels" id="stats">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">By the Numbers</span>
+            <h2>Built for Reliability</h2>
+            <p>A top IPTV service depends on its servers. Here's what keeps IPTV TOP steady.</p>
+          </div>
+          <div className="count-row">
+            <div className="count-box reveal d1"><strong>99.9%</strong><span>Network uptime</span></div>
+            <div className="count-box reveal d2"><strong>4K</strong><span>Ultra HD streaming</span></div>
+            <div className="count-box reveal d3"><strong>60+</strong><span>Countries covered</span></div>
+            <div className="count-box reveal d4"><strong>24/7</strong><span>Human support</span></div>
           </div>
         </div>
       </section>
@@ -379,6 +433,37 @@ export default function LandingHome() {
         </div>
       </section>
 
+      {/* COMPARISON */}
+      <section className="how" id="compare">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">How We Compare</span>
+            <h2>IPTV TOP vs Cable vs Cheap IPTV</h2>
+            <p>See how a reliable IPTV service stacks up against cable and bargain providers.</p>
+          </div>
+          <div className="cmp-wrap reveal">
+            <table className="cmp">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th className="cmp-us">IPTV TOP</th>
+                  <th>Cable TV</th>
+                  <th>Cheap IPTV</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Live channels</td><td className="cmp-us">50,000+</td><td>A few hundred</td><td>Often oversold</td></tr>
+                <tr><td>Movies & series</td><td className="cmp-us">200,000+</td><td>Limited / rentals</td><td>Small, outdated</td></tr>
+                <tr><td>4K quality</td><td className="cmp-us">Yes</td><td>Rare / costly</td><td>Often freezes</td></tr>
+                <tr><td>Devices</td><td className="cmp-us">All major</td><td>Box required</td><td>Hit or miss</td></tr>
+                <tr><td>Free trial</td><td className="cmp-us">24 hours</td><td>No</td><td>Rarely</td></tr>
+                <tr><td>Support</td><td className="cmp-us">24/7 human</td><td>Call queues</td><td>Often none</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* CHANNELS */}
       <section className="channels" id="channels">
         <div className="container">
@@ -394,6 +479,20 @@ export default function LandingHome() {
           </div>
           <div className="cat-grid reveal d2">
             {CATEGORIES.map((c, i) => <span className="cat" key={i}>{c}</span>)}
+          </div>
+        </div>
+      </section>
+
+      {/* FREE TRIAL */}
+      <section className="cta-band" id="free-trial">
+        <div className="container">
+          <div className="cta-inner reveal">
+            <h2>Try Our IPTV Service Free for 24 Hours</h2>
+            <p>Test the picture quality and channels on your own TV before you pay. No tricks, no risk.</p>
+            <div className="cta-band-btns">
+              <Link href={primaryHref} className="btn btn-light btn-lg">Start Free Trial</Link>
+              <a href="#pricing" className="btn btn-ghost-light btn-lg">View Plans</a>
+            </div>
           </div>
         </div>
       </section>
@@ -433,7 +532,7 @@ export default function LandingHome() {
           <div className="section-head reveal">
             <span className="eyebrow">Got Questions?</span>
             <h2>Frequently Asked Questions</h2>
-            <p>Everything you need to know before getting started.</p>
+            <p>Quick answers about our IPTV service before you start with IPTV TOP.</p>
           </div>
           <div className="faq-list reveal">
             {FAQS.map((f, i) => (
@@ -484,7 +583,7 @@ export default function LandingHome() {
         <div className="container">
           <div className="cta-inner reveal">
             <h2>Ready to start watching?</h2>
-            <p>Join thousands of happy viewers. Set up in minutes, cancel anytime.</p>
+            <p>Join thousands of viewers on IPTV TOP. Start your free trial, then pick the plan that fits — set up in minutes, cancel anytime.</p>
             <div className="cta-band-btns">
               <Link href={primaryHref} className="btn btn-light btn-lg">▶ {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}</Link>
               <a href="#pricing" className="btn btn-ghost-light btn-lg">View Plans</a>
@@ -499,7 +598,7 @@ export default function LandingHome() {
           <div className="footer-grid">
             <div className="about-col">
               <a href="#home" className="logo"><img src={LOGO_URL} alt="IPTV TOP" className="logo-img" /></a>
-              <p className="about">The future of streaming is here. Watch in stunning 4K, HD and SD with 50,000+ channels and 200,000+ on-demand titles. Premium iptv service for every device.</p>
+              <p className="about">IPTV TOP is a premium IPTV service streaming 50,000+ live channels and 200,000+ movies and series in 4K, HD and SD — on every device, with a free 24-hour trial.</p>
             </div>
             <div>
               <h4>Explore</h4>
@@ -692,6 +791,28 @@ const css = `
 .lp .footer-links a { font-size:.93rem; transition:color .2s; }
 .lp .footer-links a:hover { color:var(--blue-400); }
 .lp .footer-bottom { border-top:1px solid rgba(255,255,255,.1); padding-top:24px; text-align:center; font-size:.88rem; }
+
+/* Trust strip */
+.lp .trust-strip { background:#fff; border-bottom:1px solid rgba(37,99,235,.08); }
+.lp .trust-row { display:flex; flex-wrap:wrap; justify-content:center; gap:14px 28px; padding:18px 22px; color:#475569; font-weight:600; font-size:.9rem; }
+
+/* Benefits */
+.lp .benefits-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.lp .benefit { background:var(--bg-soft); border:1px solid rgba(37,99,235,.1); border-left:4px solid var(--blue-600); border-radius:var(--radius-sm); padding:24px 22px; transition:transform .3s, box-shadow .3s; }
+.lp .benefit:hover { transform:translateY(-6px); box-shadow:var(--shadow); }
+.lp .benefit h3 { font-size:1.1rem; margin:0 0 8px; }
+.lp .benefit p { color:var(--text-muted); font-size:.95rem; margin:0; }
+
+/* Comparison table */
+.lp .cmp-wrap { max-width:920px; margin:0 auto; overflow-x:auto; border:1px solid rgba(37,99,235,.14); border-radius:var(--radius); }
+.lp .cmp { width:100%; border-collapse:collapse; min-width:560px; }
+.lp .cmp th, .lp .cmp td { padding:14px 16px; text-align:left; border-bottom:1px solid rgba(37,99,235,.1); font-size:.95rem; }
+.lp .cmp thead th { background:var(--bg-soft); font-weight:700; }
+.lp .cmp tbody tr:last-child td { border-bottom:none; }
+.lp .cmp .cmp-us { background:rgba(37,99,235,.06); color:var(--blue-800); font-weight:700; }
+
+@media (max-width:980px){ .lp .benefits-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:640px){ .lp .benefits-grid{ grid-template-columns:1fr; } }
 
 .lp .reveal { opacity:0; transform:translateY(40px); transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1); }
 .lp .reveal.visible { opacity:1; transform:translateY(0); }
