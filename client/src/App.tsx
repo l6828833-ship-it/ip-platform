@@ -13,7 +13,6 @@ import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import Chat from "./pages/Chat";
-import AIChat from "./pages/AIChat";
 import Profile from "./pages/Profile";
 
 // Public Pages (no auth required)
@@ -128,9 +127,6 @@ function Router() {
       </Route>
       <Route path="/chat">
         {() => <ProtectedRoute component={Chat} />}
-      </Route>
-      <Route path="/ai-chat">
-        {() => <ProtectedRoute component={AIChat} />}
       </Route>
       <Route path="/apps">
         {() => <ProtectedRoute component={Apps} />}
