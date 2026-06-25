@@ -341,7 +341,7 @@ export default function LandingHome() {
                 const hiddenCount = allFeatures.length - FEATURES_PREVIEW_COUNT;
 
                 return (
-                  <Card key={plan.id} className={`relative h-full flex flex-col ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}>
+                  <Card key={plan.id} className={`relative card-hover h-full flex flex-col shadow-lg ${isPopular ? "border-primary shadow-primary/10" : ""}`}>
                     {plan.promoText && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                         <Badge className="bg-red-500 hover:bg-red-600 text-white">{plan.promoText}</Badge>
@@ -721,7 +721,7 @@ const css = `
 .lp .device:hover { transform:translateY(-6px); box-shadow:var(--shadow); border-color:rgba(37,99,235,.35); }
 .lp .device .emoji { font-size:2.3rem; }
 
-.lp .pricing { padding:100px 0; background:#fff; }
+.lp .pricing { padding:100px 0; background:var(--bg-soft); }
 .lp .plans { display:grid; grid-template-columns:repeat(4,1fr); gap:22px; align-items:stretch; }
 .lp .plan { display:flex; flex-direction:column; background:#fff; border-radius:var(--radius); border:1px solid rgba(37,99,235,.14); padding:30px 26px; position:relative; transition:transform .3s,box-shadow .3s; }
 .lp .plan:hover { transform:translateY(-8px); box-shadow:var(--shadow); }
@@ -799,15 +799,15 @@ const css = `
 .lp .footer-bottom { border-top:1px solid rgba(255,255,255,.1); padding-top:24px; text-align:center; font-size:.88rem; }
 
 /* Trust strip */
-.lp .trust-strip { background:#fff; border-bottom:1px solid rgba(37,99,235,.08); }
+.lp .trust-strip { background:var(--bg-soft); border-top:1px solid rgba(37,99,235,.08); border-bottom:1px solid rgba(37,99,235,.08); }
 .lp .trust-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; padding:24px 22px; }
 .lp .trust-row span { display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid rgba(37,99,235,.16); border-radius:999px; padding:10px 18px; color:var(--blue-950); font-weight:600; font-size:.9rem; box-shadow:0 6px 18px -10px rgba(10,22,40,.3); transition:transform .2s, box-shadow .2s; }
 .lp .trust-row span:hover { transform:translateY(-2px); box-shadow:0 10px 22px -10px rgba(37,99,235,.4); }
 
 /* Benefits */
 .lp .benefits-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
-.lp .benefit { background:var(--bg-soft); border:1px solid rgba(37,99,235,.1); border-left:4px solid var(--blue-600); border-radius:var(--radius-sm); padding:24px 22px; transition:transform .3s, box-shadow .3s; }
-.lp .benefit:hover { transform:translateY(-6px); box-shadow:var(--shadow); }
+.lp .benefit { background:#fff; border:1px solid rgba(37,99,235,.14); border-left:4px solid var(--blue-600); border-radius:var(--radius-sm); padding:26px 22px; box-shadow:0 14px 34px -20px rgba(10,22,40,.30); transition:transform .3s, box-shadow .3s; }
+.lp .benefit:hover { transform:translateY(-6px); box-shadow:0 22px 48px -22px rgba(10,22,40,.34); }
 .lp .benefit h3 { font-size:1.1rem; margin:0 0 8px; }
 .lp .benefit p { color:var(--text-muted); font-size:.95rem; margin:0; }
 
