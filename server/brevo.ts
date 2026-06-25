@@ -1,4 +1,5 @@
 import * as brevo from '@getbrevo/brevo';
+import * as db from './db';
 
 /* =======================
    CONFIG
@@ -25,13 +26,44 @@ if (!senderEmail) {
   console.error('   Please set BREVO_SENDER_EMAIL in your environment variables.');
 }
 
-const BASE_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://members.iptvprovider8k.com';
-const DASHBOARD_URL = `${BASE_URL}/dashboard`;
-const CHAT_URL = `${BASE_URL}/chat`;
+let BASE_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://members.iptvprovider8k.com';
+let DASHBOARD_URL = `${BASE_URL}/dashboard`;
+let CHAT_URL = `${BASE_URL}/chat`;
+let PLANS_URL = `${BASE_URL}/plans`;
+let SITE_NAME = senderName;
+
+// Branding (site name + links) is admin-configurable via site settings, cached briefly.
+let _brandLoadedAt = 0;
+async function loadBranding(): Promise<void> {
+  if (Date.now() - _brandLoadedAt < 30000) return;
+  try {
+    const [n, b, s, p] = await Promise.all([
+      db.getSetting('email_site_name'),
+      db.getSetting('email_base_url'),
+      db.getSetting('email_support_url'),
+      db.getSetting('email_plans_url'),
+    ]);
+    if (n?.value) SITE_NAME = n.value;
+    if (b?.value) {
+      BASE_URL = b.value.replace(/\/+$/, '');
+      DASHBOARD_URL = `${BASE_URL}/dashboard`;
+      CHAT_URL = `${BASE_URL}/chat`;
+      PLANS_URL = `${BASE_URL}/plans`;
+    }
+    if (s?.value) CHAT_URL = s.value;
+    if (p?.value) PLANS_URL = p.value;
+    _brandLoadedAt = Date.now();
+  } catch {
+    /* keep current defaults */
+  }
+}
 
 console.log('Base URL:', BASE_URL);
 console.log('Dashboard URL:', DASHBOARD_URL);
 console.log('========================================');
+
+// Warm the branding cache shortly after boot so even the first email is branded.
+void loadBranding();
 
 /* =======================
    BREVO INIT
@@ -93,7 +125,8 @@ function chatSupport() {
   `;
 }
 
-function emailTemplate(content: string) {
+async function renderEmail(content: string): Promise<string> {
+  await loadBranding();
   return `
 <!DOCTYPE html>
 <html>
@@ -110,10 +143,10 @@ function emailTemplate(content: string) {
 <tr>
 <td style="
   padding:28px 40px;
-  background:linear-gradient(135deg,#6366f1,#4f46e5);
+  background:linear-gradient(135deg,#2563EB,#1E3A8A);
   text-align:center">
   <h1 style="margin:0;color:#fff;font-size:24px">
-    IPTV Premium
+    📺 ${SITE_NAME}
   </h1>
   <p style="margin-top:6px;color:#e0e7ff;font-size:14px">
     Unlimited Entertainment Access
@@ -135,8 +168,15 @@ function emailTemplate(content: string) {
   text-align:center;
   background:#f8fafc;
   border-top:1px solid #e5e7eb">
+  <p style="margin:0 0 10px;font-size:13px">
+    <a href="${PLANS_URL}" style="color:#2563EB;text-decoration:none;font-weight:600">Plans</a>
+    &nbsp;·&nbsp;
+    <a href="${CHAT_URL}" style="color:#2563EB;text-decoration:none;font-weight:600">Support</a>
+    &nbsp;·&nbsp;
+    <a href="${DASHBOARD_URL}" style="color:#2563EB;text-decoration:none;font-weight:600">Dashboard</a>
+  </p>
   <p style="margin:0;font-size:12px;color:#94a3b8">
-    © ${new Date().getFullYear()} IPTV Premium. All rights reserved.
+    © ${new Date().getFullYear()} ${SITE_NAME}. All rights reserved.
   </p>
 </td>
 </tr>
@@ -194,7 +234,7 @@ async function sendEmail(
     }
 
     const email = new brevo.SendSmtpEmail();
-    email.sender = { email: senderEmail, name: senderName };
+    email.sender = { email: senderEmail, name: SITE_NAME };
     email.to = [{ email: to }];
     email.subject = subject;
     email.htmlContent = htmlContent;
@@ -283,8 +323,8 @@ export async function sendOTPEmail(
 
     const result = await sendEmail(
       email,
-      'Verify Your Email - IPTV Premium',
-      emailTemplate(content),
+      `Verify Your Email - ${SITE_NAME}`,
+      await renderEmail(content),
       []
     );
     
@@ -315,9 +355,9 @@ export async function sendWelcomeEmail(
 
   try {
     const content = `
-      <h2 style="color:#1e293b">Welcome to IPTV Premium! 🎉</h2>
+      <h2 style="color:#1e293b">Welcome to ${SITE_NAME}! 🎉</h2>
       <p style="color:#475569">
-        Hi <strong>${userName}</strong>, thanks for joining IPTV Premium!
+        Hi <strong>${userName}</strong>, thanks for joining ${SITE_NAME}!
       </p>
       <p style="color:#475569">
         Your account is ready. Browse our plans and get instant access to premium entertainment.
@@ -326,8 +366,8 @@ export async function sendWelcomeEmail(
 
     const result = await sendEmail(
       email,
-      'Welcome to IPTV Premium! 🎉',
-      emailTemplate(content),
+      `Welcome to ${SITE_NAME}! 🎉`,
+      await renderEmail(content),
       []
     );
 
@@ -396,7 +436,7 @@ export async function sendOrderConfirmationEmail(params: {
     const result = await sendEmail(
       to,
       `Order Confirmation #${orderId}`,
-      emailTemplate(content),
+      await renderEmail(content),
       ['soay300@gmail.com', 'support@iptvtop.live']
     );
     
@@ -505,7 +545,7 @@ export async function sendCredentialsEmail(
     const result = await sendEmail(
       email,
       'Your IPTV Credentials',
-      emailTemplate(content),
+      await renderEmail(content),
       []
     );
     
@@ -554,7 +594,7 @@ export async function sendPaymentVerificationEmail(params: {
     const result = await sendEmail(
       to,
       `Payment ${status} - Order #${orderId}`,
-      emailTemplate(content),
+      await renderEmail(content),
       []
     );
     
@@ -653,7 +693,7 @@ export async function sendAdminNewOrderEmail(params: {
     const result = await sendEmail(
       adminEmail,
       `🆕 New Order #${orderId}`,
-      emailTemplate(content),
+      await renderEmail(content),
       []
     );
     
@@ -721,7 +761,7 @@ export async function sendNewChatMessageEmail(params: {
     const result = await sendEmail(
       to,
       `New Chat Message from ${senderName}`,
-      emailTemplate(content),
+      await renderEmail(content),
       []
     );
     
@@ -750,7 +790,7 @@ export async function sendTestEmail(to: string): Promise<{ success: boolean; err
   const content = `
     <h2 style="color:#1e293b">Test Email ✅</h2>
     <p style="color:#475569">
-      This is a test email from IPTV Premium.
+      This is a test email from ${SITE_NAME}.
     </p>
     <p style="color:#475569">
       If you received this email, your email configuration is working correctly!
@@ -762,8 +802,8 @@ export async function sendTestEmail(to: string): Promise<{ success: boolean; err
 
   return await sendEmail(
     to,
-    'Test Email - IPTV Premium',
-    emailTemplate(content),
+    `Test Email - ${SITE_NAME}`,
+    await renderEmail(content),
     []
   ).then(result => {
     if (result.success) {

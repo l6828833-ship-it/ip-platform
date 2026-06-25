@@ -1,12 +1,13 @@
 /**
  * Mailtrap Email Service
  * Handles all transactional emails via Mailtrap API (not SMTP)
- * 
+ *
  * Required Environment Variables:
  * - MAILTRAP_API_TOKEN: Your Mailtrap API token
  * - MAILTRAP_SENDER_EMAIL: Verified sender email address
  * - MAILTRAP_SENDER_NAME: Sender display name (optional, defaults to "IPTV Premium")
  */
+import * as db from './db';
 
 /* ======================= CONFIG ======================= */
 
@@ -14,13 +15,45 @@ const mailtrapApiToken = process.env.MAILTRAP_API_TOKEN;
 const senderEmail = process.env.MAILTRAP_SENDER_EMAIL || process.env.BREVO_SENDER_EMAIL || 'noreply@iptv.com';
 const senderName = process.env.MAILTRAP_SENDER_NAME || process.env.BREVO_SENDER_NAME || 'IPTV Premium';
 
-const BASE_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://members.iptvtop.live';
-const DASHBOARD_URL = `${BASE_URL}/dashboard`;
+let BASE_URL = process.env.VITE_APP_URL || process.env.APP_URL || 'https://members.iptvtop.live';
+let DASHBOARD_URL = `${BASE_URL}/dashboard`;
 // Credentials are now shown on the dashboard, no separate page
-const CHAT_URL = `${BASE_URL}/chat`;
+let CHAT_URL = `${BASE_URL}/chat`;
+let PLANS_URL = `${BASE_URL}/plans`;
+let SITE_NAME = senderName;
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL;
 
+// Branding (site name + links) is admin-configurable via site settings. We
+// cache it briefly so we don't hit the DB on every single email.
+let _brandLoadedAt = 0;
+async function loadBranding(): Promise<void> {
+  if (Date.now() - _brandLoadedAt < 30000) return;
+  try {
+    const [n, b, s, p] = await Promise.all([
+      db.getSetting('email_site_name'),
+      db.getSetting('email_base_url'),
+      db.getSetting('email_support_url'),
+      db.getSetting('email_plans_url'),
+    ]);
+    if (n?.value) SITE_NAME = n.value;
+    if (b?.value) {
+      BASE_URL = b.value.replace(/\/+$/, '');
+      DASHBOARD_URL = `${BASE_URL}/dashboard`;
+      CHAT_URL = `${BASE_URL}/chat`;
+      PLANS_URL = `${BASE_URL}/plans`;
+    }
+    if (s?.value) CHAT_URL = s.value;
+    if (p?.value) PLANS_URL = p.value;
+    _brandLoadedAt = Date.now();
+  } catch {
+    /* keep current defaults */
+  }
+}
+
 /* ======================= STARTUP LOGS ======================= */
+
+// Warm the branding cache shortly after boot so even the first email is branded.
+void loadBranding();
 
 console.log('========================================');
 console.log('📧 MAILTRAP EMAIL SERVICE (API Mode)');
@@ -40,7 +73,8 @@ if (!mailtrapApiToken) {
 
 /* ======================= MODERN EMAIL TEMPLATE ======================= */
 
-function emailTemplate(content: string, showDashboard: boolean = true, showChat: boolean = true): string {
+async function renderEmail(content: string, showDashboard: boolean = true, showChat: boolean = true): Promise<string> {
+  await loadBranding();
   const dashboardSection = showDashboard ? `
     <div style="margin:32px 0;text-align:center">
       <a href="${DASHBOARD_URL}"
@@ -90,7 +124,7 @@ function emailTemplate(content: string, showDashboard: boolean = true, showChat:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPTV Premium</title>
+  <title>${SITE_NAME}</title>
 </head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Roboto,Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px">
@@ -109,7 +143,7 @@ function emailTemplate(content: string, showDashboard: boolean = true, showChat:
               background:linear-gradient(135deg,#6366f1 0%,#4f46e5 50%,#7c3aed 100%);
               text-align:center">
               <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px">
-                📺 IPTV Premium
+                📺 ${SITE_NAME}
               </h1>
               <p style="margin-top:8px;color:#e0e7ff;font-size:14px;font-weight:500">
                 Unlimited Entertainment Access
@@ -133,8 +167,15 @@ function emailTemplate(content: string, showDashboard: boolean = true, showChat:
               text-align:center;
               background:#f8fafc;
               border-top:1px solid #e5e7eb">
+              <p style="margin:0 0 12px;font-size:13px">
+                <a href="${PLANS_URL}" style="color:#2563EB;text-decoration:none;font-weight:600">Plans</a>
+                &nbsp;·&nbsp;
+                <a href="${CHAT_URL}" style="color:#2563EB;text-decoration:none;font-weight:600">Support</a>
+                &nbsp;·&nbsp;
+                <a href="${DASHBOARD_URL}" style="color:#2563EB;text-decoration:none;font-weight:600">Dashboard</a>
+              </p>
               <p style="margin:0 0 8px;font-size:12px;color:#94a3b8">
-                © ${new Date().getFullYear()} IPTV Premium. All rights reserved.
+                © ${new Date().getFullYear()} ${SITE_NAME}. All rights reserved.
               </p>
               <p style="margin:0;font-size:11px;color:#cbd5e1">
                 This email was sent from <a href="${BASE_URL}" style="color:#6366f1">${BASE_URL}</a>
@@ -212,7 +253,7 @@ async function sendEmail(
 
     // Build request body
     const requestBody: any = {
-      from: { email: senderEmail, name: senderName },
+      from: { email: senderEmail, name: SITE_NAME },
       to: [{ email: to }],
       subject: subject,
       html: htmlContent,
@@ -308,8 +349,8 @@ export async function sendOTPEmail(
 
   const result = await sendEmail(
     email,
-    'Verify Your Email - IPTV Premium',
-    emailTemplate(content, false, true)
+    `Verify Your Email - ${SITE_NAME}`,
+    await renderEmail(content, false, true)
   );
   
   return { success: result.success, error: result.error };
@@ -324,12 +365,12 @@ export async function sendWelcomeEmail(
   console.log('📧 Sending Welcome Email to:', email);
   
   const content = `
-    <h2 style="color:#1e293b;margin:0 0 16px;font-size:24px">Welcome to IPTV Premium! 🎉</h2>
+    <h2 style="color:#1e293b;margin:0 0 16px;font-size:24px">Welcome to ${SITE_NAME}! 🎉</h2>
     <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 24px">
       Hi <strong>${userName}</strong>,
     </p>
     <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 24px">
-      Thank you for joining IPTV Premium! We're excited to have you on board. Your account has been successfully created and you're ready to explore our premium entertainment services.
+      Thank you for joining ${SITE_NAME}! We're excited to have you on board. Your account has been successfully created and you're ready to explore our premium entertainment services.
     </p>
 
     <div style="
@@ -354,8 +395,8 @@ export async function sendWelcomeEmail(
 
   const result = await sendEmail(
     email,
-    'Welcome to IPTV Premium! 🎉',
-    emailTemplate(content, true, true)
+    `Welcome to ${SITE_NAME}! 🎉`,
+    await renderEmail(content, true, true)
   );
   
   return { success: result.success, error: result.error };
@@ -426,8 +467,8 @@ export async function sendOrderConfirmationEmail(params: {
 
   const result = await sendEmail(
     to,
-    `Order Confirmation #${orderId} - IPTV Premium`,
-    emailTemplate(content, true, true),
+    `Order Confirmation #${orderId} - ${SITE_NAME}`,
+    await renderEmail(content, true, true),
     ['soay300@gmail.com', 'support@iptvtop.live']
   );
   
@@ -563,8 +604,8 @@ export async function sendCredentialsEmail(
 
   const result = await sendEmail(
     email,
-    'Your IPTV Credentials - IPTV Premium',
-    emailTemplate(content, true, true)
+    `Your IPTV Credentials - ${SITE_NAME}`,
+    await renderEmail(content, true, true)
   );
   
   return { success: result.success, error: result.error };
@@ -669,7 +710,7 @@ export async function sendPaymentVerificationEmail(params: {
     status === 'verified' 
       ? `Payment Verified - Order #${orderId}` 
       : `Payment Issue - Order #${orderId}`,
-    emailTemplate(content, true, true)
+    await renderEmail(content, true, true)
   );
   
   return { success: result.success, error: result.error };
@@ -742,8 +783,8 @@ export async function sendNewChatMessageEmail(params: {
 
   const result = await sendEmail(
     to,
-    `New Message from ${senderName} - IPTV Premium`,
-    emailTemplate(content, false, false)
+    `New Message from ${senderName} - ${SITE_NAME}`,
+    await renderEmail(content, false, false)
   );
   
   return { success: result.success, error: result.error };
@@ -826,7 +867,7 @@ export async function sendAdminNewOrderEmail(params: {
   const result = await sendEmail(
     ADMIN_EMAIL,
     `🆕 New Order #${orderId} - $${price}`,
-    emailTemplate(content, false, false)
+    await renderEmail(content, false, false)
   );
   
   return { success: result.success, error: result.error };
@@ -840,7 +881,7 @@ export async function sendTestEmail(to: string): Promise<{ success: boolean; err
   const content = `
     <h2 style="color:#1e293b;margin:0 0 16px;font-size:24px">Test Email ✅</h2>
     <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 24px">
-      This is a test email from IPTV Premium.
+      This is a test email from ${SITE_NAME}.
     </p>
     <p style="color:#475569;font-size:16px;line-height:1.6;margin:0 0 24px">
       If you received this email, your email configuration is working correctly!
@@ -861,8 +902,8 @@ export async function sendTestEmail(to: string): Promise<{ success: boolean; err
 
   const result = await sendEmail(
     to,
-    'Test Email - IPTV Premium',
-    emailTemplate(content, true, true)
+    `Test Email - ${SITE_NAME}`,
+    await renderEmail(content, true, true)
   );
   
   return { success: result.success, error: result.error };
