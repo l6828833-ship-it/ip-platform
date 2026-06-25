@@ -43,7 +43,19 @@ export default function Dashboard() {
   const { data: pointsData } = trpc.activations.myPoints.useQuery();
   const { data: messages } = trpc.dashboardMessages.forMe.useQuery();
   const dismissMessage = trpc.dashboardMessages.dismiss.useMutation({
-    onSuccess: () => utils.dashboardMessages.forMe.invalidate(),
+    // Optimistically remove the message so it disappears instantly
+    onMutate: async ({ messageId }) => {
+      await utils.dashboardMessages.forMe.cancel();
+      const prev = utils.dashboardMessages.forMe.getData();
+      utils.dashboardMessages.forMe.setData(undefined, (old) =>
+        (old ?? []).filter((m) => m.id !== messageId)
+      );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) utils.dashboardMessages.forMe.setData(undefined, ctx.prev);
+    },
+    onSettled: () => utils.dashboardMessages.forMe.invalidate(),
   });
 
   const activationPoints = pointsData?.points ?? 0;
