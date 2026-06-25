@@ -1004,9 +1004,67 @@ export const appRouter = router({
 
         return { content: text.trim() || "Sorry, I couldn't generate a response. Please try again." };
       }),
-  }),
 
-  // ============ SITE SETTINGS ============
+    // ---- Public variants for the marketing homepage (anonymous visitors) ----
+    publicConfig: publicProcedure.query(async () => {
+      const setting = await db.getSetting("ai_chat_enabled");
+      const enabled = setting?.value === "true";
+      return { enabled: enabled && Boolean(ENV.forgeApiKey) };
+    }),
+
+    // Public live agent: no account data (visitor isn't logged in). Used on the
+    // homepage. Gated by the same admin toggle + API key.
+    publicChat: publicProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.enum(["system", "user", "assistant"]),
+          content: z.string().max(2000),
+        })).min(1).max(40),
+      }))
+      .mutation(async ({ input }) => {
+        const setting = await db.getSetting("ai_chat_enabled");
+        if (setting?.value !== "true") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "The live agent is currently offline." });
+        }
+        if (!ENV.forgeApiKey) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The live agent is not configured yet." });
+        }
+
+        const promptSetting = await db.getSetting("ai_chat_prompt");
+        const systemPrompt =
+          promptSetting?.value && promptSetting.value.trim().length > 0
+            ? promptSetting.value
+            : DEFAULT_AI_CHAT_PROMPT;
+
+        const visitorNote =
+          "NOTE: This is a website visitor who is NOT logged in, so you have no access to their account or orders. " +
+          "Answer general questions about plans, devices, payments, and activation. " +
+          "For anything account-specific, invite them to sign up, log in, or open a Support Ticket.";
+
+        const userMessages = input.messages
+          .filter(m => m.role !== "system")
+          .slice(-24);
+
+        const result = await invokeLLM({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "system", content: visitorNote },
+            ...userMessages,
+          ],
+          maxTokens: 700,
+        });
+
+        const content = result.choices?.[0]?.message?.content;
+        const text =
+          typeof content === "string"
+            ? content
+            : Array.isArray(content)
+              ? content.map(p => ("text" in p ? p.text : "")).join("")
+              : "";
+
+        return { content: text.trim() || "Sorry, I couldn't generate a response. Please try again." };
+      }),
+  }),
   settings: router({
     list: adminProcedure.query(async () => {
       return db.getAllSettings();

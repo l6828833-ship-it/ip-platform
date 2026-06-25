@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 
 // Pages
 import Login from "./pages/Login";
+import LandingHome from "./pages/LandingHome";
 import Dashboard from "./pages/Dashboard";
 import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
@@ -91,8 +92,25 @@ function Router() {
   
   return (
     <Switch>
-      {/* Root path - Login or redirect to dashboard */}
+      {/* Root path - public landing for visitors, dashboard for logged-in users */}
       <Route path="/">
+        {() => {
+          if (loading) {
+            return (
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 spinner" />
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </div>
+            );
+          }
+          return isAuthenticated ? <Redirect to="/dashboard" /> : <LandingHome />;
+        }}
+      </Route>
+
+      {/* Login / Sign up */}
+      <Route path="/login">
         {() => {
           if (loading) {
             return (
