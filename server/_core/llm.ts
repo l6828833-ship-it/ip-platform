@@ -212,7 +212,7 @@ const normalizeToolChoice = (
 const resolveApiUrl = () =>
   ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
     ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-    : "https://forge.manus.im/v1/chat/completions";
+    : "https://api.openai.com/v1/chat/completions";
 
 const assertApiKey = () => {
   if (!ENV.forgeApiKey) {
@@ -279,8 +279,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     response_format,
   } = params;
 
+  const model = ENV.aiModel && ENV.aiModel.trim().length > 0 ? ENV.aiModel : "gpt-4o-mini";
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model,
     messages: messages.map(normalizeMessage),
   };
 
@@ -296,9 +297,16 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768
-  payload.thinking = {
-    "budget_tokens": 128
+  // Respect a caller-provided token limit; default to a safe value that works
+  // across providers (OpenAI rejects values above a model's max output).
+  payload.max_tokens = params.maxTokens ?? params.max_tokens ?? 4096;
+
+  // The "thinking" budget param is Gemini/Forge-specific; only send it for
+  // Gemini models so OpenAI-compatible endpoints don't reject the request.
+  if (model.toLowerCase().includes("gemini")) {
+    payload.thinking = {
+      budget_tokens: 128,
+    };
   }
 
   const normalizedResponseFormat = normalizeResponseFormat({

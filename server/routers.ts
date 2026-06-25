@@ -5,6 +5,8 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
+import { ENV } from "./_core/env";
+import { invokeLLM } from "./_core/llm";
 import { sendOrderConfirmationEmail, sendCredentialsEmail, sendPaymentVerificationEmail, sendNewChatMessageEmail, sendAdminNewOrderEmail, sendTestEmail, sendOrderRejectionEmail, sendWelcomeEmail } from "./mailtrap";
 import { runEmailDiagnostic } from "./emailDiagnostic";
 import {
@@ -29,6 +31,73 @@ const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+const AI_SUPPORT_SENDER_ID = 0;
+
+const DEFAULT_AI_SUPPORT_PROMPT = `You are a helpful customer support assistant for an IPTV subscription service.
+Be friendly, concise, and professional. Reply in the same language the customer uses.
+You can help with general questions about plans, connections, supported devices, how to pay, and how activation points work.
+Do NOT invent order numbers, passwords, account credentials, prices, or promises about refunds.
+For anything involving a specific account, payment verification, refunds, or changing an order, tell the customer that a human support agent will follow up shortly.
+Keep answers short (1-4 sentences) unless the customer asks for detailed steps.`;
+
+/**
+ * Generate an AI support reply for a conversation and store it as an "agent" message.
+ * Runs fire-and-forget after a user posts a message. Safe to fail silently.
+ */
+async function generateAiSupportReply(conversationId: number): Promise<void> {
+  // Disabled unless explicitly enabled and an API key is configured.
+  if (!ENV.aiSupportEnabled || !ENV.forgeApiKey) return;
+
+  const msgs = await db.getMessagesByConversationId(conversationId);
+  if (!msgs.length) return;
+
+  // If a human staff member (agent/admin with a real senderId) has joined the
+  // conversation, step aside and let the human handle it.
+  const humanJoined = msgs.some(
+    m =>
+      (m.senderRole === "admin" || m.senderRole === "agent") &&
+      m.senderId !== AI_SUPPORT_SENDER_ID
+  );
+  if (humanJoined) return;
+
+  // The most recent message must be from the user (don't reply to ourselves).
+  const last = msgs[msgs.length - 1];
+  if (!last || last.senderRole !== "user") return;
+
+  // Build a short rolling history for context.
+  const history = msgs.slice(-20).map(m => ({
+    role: (m.senderRole === "user" ? "user" : "assistant") as "user" | "assistant",
+    content: m.message,
+  }));
+
+  const systemPrompt =
+    ENV.aiSupportPrompt && ENV.aiSupportPrompt.trim().length > 0
+      ? ENV.aiSupportPrompt
+      : DEFAULT_AI_SUPPORT_PROMPT;
+
+  const result = await invokeLLM({
+    messages: [{ role: "system", content: systemPrompt }, ...history],
+    maxTokens: 600,
+  });
+
+  const content = result.choices?.[0]?.message?.content;
+  const text =
+    typeof content === "string"
+      ? content
+      : Array.isArray(content)
+        ? content.map(p => ("text" in p ? p.text : "")).join("")
+        : "";
+
+  if (!text.trim()) return;
+
+  await db.createMessage({
+    conversationId,
+    senderId: AI_SUPPORT_SENDER_ID,
+    senderRole: "agent",
+    message: text.trim(),
+  });
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -794,6 +863,17 @@ export const appRouter = router({
             // Do not block the chat message if email fails
         }
         // --- END NEW EMAIL NOTIFICATION LOGIC ---
+
+        // --- AI SUPPORT AUTO-REPLY (fire-and-forget) ---
+        // When a customer sends a message, let the AI assistant respond.
+        // It no-ops unless enabled via env and an API key is set, and it steps
+        // aside automatically once a human agent has joined the conversation.
+        if (ctx.user.role === 'user') {
+            generateAiSupportReply(input.conversationId).catch(err => {
+                console.error('[AI support] auto-reply failed:', err);
+            });
+        }
+        // --- END AI SUPPORT AUTO-REPLY ---
 
         return { success: true, id };
       }),
