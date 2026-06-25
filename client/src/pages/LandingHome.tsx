@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { Check, Users, Coins, ChevronDown, ChevronUp } from "lucide-react";
 import PublicAIChatWidget from "@/components/PublicAIChatWidget";
+
+const LOGO_URL = "https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png";
 
 /* Marketing homepage (public). White theme, live pricing from the real plans,
    and a public Live Agent chat. Served at "/" for visitors. */
@@ -70,7 +77,11 @@ export default function LandingHome() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [selectedConnections, setSelectedConnections] = useState<Record<number, number>>({});
+  const [expandedPlans, setExpandedPlans] = useState<Record<number, boolean>>({});
   const tTrack = useRef<HTMLDivElement>(null);
+
+  const FEATURES_PREVIEW_COUNT = 6;
 
   // Where primary CTAs should point depending on auth state
   const primaryHref = isAuthenticated ? "/dashboard" : "/login";
@@ -100,10 +111,22 @@ export default function LandingHome() {
     return () => obs.disconnect();
   }, [plans]);
 
-  const getPrice = (plan: NonNullable<typeof plans>[number]) => {
-    const tier = plan.pricing?.find((p) => p.connections === 1) ?? plan.pricing?.[0];
-    return tier?.price ?? "0.00";
+  const getPrice = (plan: NonNullable<typeof plans>[number], connections: number) => {
+    const pricing = plan.pricing?.find((p) => p.connections === connections);
+    return pricing?.price || "0.00";
   };
+
+  const getPoints = (plan: NonNullable<typeof plans>[number], connections: number) => {
+    const tier = plan.pricing?.find((p) => p.connections === connections);
+    const tierPoints = (tier as { points?: number } | undefined)?.points ?? 0;
+    return tierPoints > 0 ? tierPoints : ((plan as { activationPoints?: number }).activationPoints ?? 0);
+  };
+
+  const getConnections = (planId: number) => selectedConnections[planId] || 1;
+  const handleConnectionChange = (planId: number, value: number[]) =>
+    setSelectedConnections((prev) => ({ ...prev, [planId]: value[0] }));
+  const toggleExpanded = (planId: number) =>
+    setExpandedPlans((prev) => ({ ...prev, [planId]: !prev[planId] }));
 
   const scrollT = (dir: number) => {
     const el = tTrack.current;
@@ -119,7 +142,7 @@ export default function LandingHome() {
       {/* NAVBAR */}
       <header className={`navbar ${scrolled ? "scrolled" : ""}`}>
         <div className="container nav-inner">
-          <a href="#home" className="logo"><span className="logo-mark">📺</span>IPTV<span>TOP</span></a>
+          <a href="#home" className="logo"><img src={LOGO_URL} alt="IPTV TOP" className="logo-img" /></a>
           <nav className="nav-links">
             <a href="#features">Features</a>
             <a href="#how">How it Works</a>
@@ -233,40 +256,119 @@ export default function LandingHome() {
         </div>
       </section>
 
-      {/* PRICING (live plans) */}
+      {/* PRICING (live plans — same shape as /plans) */}
       <section className="pricing" id="pricing">
         <div className="container">
           <div className="section-head reveal">
             <span className="eyebrow">Simple Pricing</span>
             <h2>Choose Your Plan</h2>
-            <p>Premium quality without the premium price. Live prices from our store — updated automatically.</p>
+            <p>Select the number of connections you need. All plans include premium channels, HD quality, and 24/7 support.</p>
           </div>
 
           {!plans ? (
-            <div className="plans">
-              {[1, 2, 3, 4].map((i) => <div className="plan skeleton-card" key={i} />)}
+            <div className="pl-grid reveal">
+              {[1, 2, 3, 4].map((i) => <div key={i} className="h-96 rounded-xl bg-[#eef3fc] animate-pulse" />)}
             </div>
           ) : plans.length === 0 ? (
             <p style={{ textAlign: "center", color: "#5b6b85" }}>Plans are being updated. Please check back soon.</p>
           ) : (
-            <div className="plans">
-              {plans.map((plan, idx) => {
-                const popular = idx === Math.min(2, plans.length - 1);
-                const features = ((plan.features as string[]) || []).slice(0, 6);
+            <div className="pl-grid reveal">
+              {plans.map((plan, index) => {
+                const connections = getConnections(plan.id);
+                const price = getPrice(plan, connections);
+                const points = getPoints(plan, connections);
+                const isPopular = index === 1;
+                const allFeatures = (plan.features as string[]) || [];
+                const isExpanded = expandedPlans[plan.id];
+                const visibleFeatures = isExpanded ? allFeatures : allFeatures.slice(0, FEATURES_PREVIEW_COUNT);
+                const hiddenCount = allFeatures.length - FEATURES_PREVIEW_COUNT;
+
                 return (
-                  <div className={`plan ${popular ? "popular" : ""} reveal d${(idx % 4) + 1}`} key={plan.id}>
-                    {plan.promoText && <span className="plan-badge">{plan.promoText}</span>}
-                    <h3>{plan.name}</h3>
-                    <div className="price">${getPrice(plan)}</div>
-                    <div className="per">/ {plan.durationDays} days</div>
-                    <ul>
-                      {features.map((f, i) => <li key={i}><span className="ck">✓</span> {f}</li>)}
-                      <li><span className="ck">✓</span> Up to {plan.maxConnections} connections</li>
-                    </ul>
-                    <Link href={`/order/${plan.id}`} className={`btn ${popular ? "btn-primary" : "btn-outline"}`} style={{ width: "100%" }}>
-                      Get Started
-                    </Link>
-                  </div>
+                  <Card key={plan.id} className={`relative ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}>
+                    {plan.promoText && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                        <Badge className="bg-red-500 hover:bg-red-600 text-white">{plan.promoText}</Badge>
+                      </div>
+                    )}
+                    <CardHeader className="text-center pb-2">
+                      <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      <CardDescription>{plan.description}</CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-6">
+                      <div className="text-center">
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className="text-4xl font-bold">${price}</span>
+                          <span className="text-muted-foreground">/{plan.durationDays} days</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Connections</span>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-primary" />
+                            <span className="font-bold text-primary">{connections}</span>
+                          </div>
+                        </div>
+                        <Slider
+                          value={[connections]}
+                          onValueChange={(value) => handleConnectionChange(plan.id, value)}
+                          min={1}
+                          max={plan.maxConnections}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>1</span>
+                          <span>{plan.maxConnections}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {visibleFeatures.map((feature, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                        {hiddenCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleExpanded(plan.id)}
+                            className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            {isExpanded ? (<>Show less <ChevronUp className="h-4 w-4" /></>) : (<>Show all features ({hiddenCount} more) <ChevronDown className="h-4 w-4" /></>)}
+                          </button>
+                        )}
+                        <div className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>{connections} simultaneous {connections === 1 ? "device" : "devices"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>{plan.durationDays} days validity</span>
+                        </div>
+                        {points > 0 && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Coins className="h-4 w-4 text-amber-500 shrink-0" />
+                            <span><strong>{points}</strong> activation {points === 1 ? "point" : "points"} for {connections} {connections === 1 ? "connection" : "connections"}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+
+                    <CardFooter>
+                      <Link
+                        href={isAuthenticated ? `/checkout/${plan.id}?connections=${connections}` : `/order/${plan.id}?connections=${connections}`}
+                        className="w-full"
+                      >
+                        <Button className={`w-full ${isPopular ? "gradient-primary" : ""}`} variant={isPopular ? "default" : "outline"}>
+                          Select Plan
+                        </Button>
+                      </Link>
+                    </CardFooter>
+                  </Card>
                 );
               })}
             </div>
@@ -379,7 +481,7 @@ export default function LandingHome() {
         <div className="container">
           <div className="footer-grid">
             <div className="about-col">
-              <a href="#home" className="logo"><span className="logo-mark">📺</span>IPTV<span>TOP</span></a>
+              <a href="#home" className="logo"><img src={LOGO_URL} alt="IPTV TOP" className="logo-img" /></a>
               <p className="about">The future of streaming is here. Watch in stunning 4K, HD and SD with 50,000+ channels and 200,000+ on-demand titles. Premium iptv service for every device.</p>
             </div>
             <div>
@@ -437,6 +539,7 @@ const css = `
 .lp .logo { display:flex; align-items:center; gap:10px; font-family:'Poppins'; font-weight:800; font-size:1.3rem; color:var(--blue-950); }
 .lp .logo-mark { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; background:var(--gradient-primary); box-shadow:var(--shadow-glow); font-size:1.1rem; }
 .lp .logo span { color:var(--blue-600); }
+.lp .logo-img { height:44px; width:auto; display:block; }
 .lp .nav-links { display:flex; align-items:center; gap:32px; }
 .lp .nav-links a { color:#2b3a55; font-weight:500; font-size:.98rem; transition:color .2s; }
 .lp .nav-links a:hover { color:var(--blue-600); }
@@ -508,6 +611,7 @@ const css = `
 .lp .plan li { display:flex; gap:9px; font-size:.92rem; color:#2b3a55; }
 .lp .plan li .ck { color:var(--blue-600); font-weight:800; }
 .lp .plan .btn { margin-top:auto; }
+.lp .pl-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; align-items:start; }
 
 .lp .channels { padding:100px 0; background:var(--bg-soft); }
 .lp .count-row { display:flex; justify-content:center; gap:50px; flex-wrap:wrap; margin-bottom:50px; }
@@ -576,6 +680,7 @@ const css = `
   .lp .steps{grid-template-columns:1fr;}
   .lp .device-grid{grid-template-columns:repeat(3,1fr);}
   .lp .plans{grid-template-columns:repeat(2,1fr);}
+  .lp .pl-grid{grid-template-columns:repeat(2,1fr);}
   .lp .footer-grid{grid-template-columns:1fr 1fr;}
   .lp .footer .about-col{grid-column:1 / -1;}
 }
@@ -585,6 +690,7 @@ const css = `
   .lp .features-grid{grid-template-columns:1fr;}
   .lp .device-grid{grid-template-columns:repeat(2,1fr);}
   .lp .plans{grid-template-columns:1fr;}
+  .lp .pl-grid{grid-template-columns:1fr;}
   .lp .pay-grid{grid-template-columns:1fr;}
   .lp .footer-grid{grid-template-columns:1fr;}
 }
