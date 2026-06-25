@@ -117,6 +117,52 @@ ${actLines}
 Status meaning: "pending" = waiting for payment confirmation and/or our team to activate and deliver login details; "verified" = active (login details are on the Dashboard); "rejected" = not approved (reason shown if any).`;
 }
 
+type AutoMsgKey = "account_activated" | "points" | "expiry_warning" | "expired";
+type AutoMsgStyle = "info" | "success" | "warning" | "error";
+type AutoMsgTemplate = { enabled: boolean; title: string; body: string; style: AutoMsgStyle };
+
+const AUTO_MSG_SETTING_PREFIX = "automsg_";
+const AUTO_MESSAGE_KEYS: AutoMsgKey[] = ["account_activated", "points", "expiry_warning", "expired"];
+
+const AUTO_MESSAGE_DEFAULTS: Record<AutoMsgKey, AutoMsgTemplate> = {
+  account_activated: {
+    enabled: true,
+    title: "Account Activated 🎉",
+    body: "Great news — your subscription is now active! Your login details are available right here on your dashboard.",
+    style: "success",
+  },
+  points: {
+    enabled: true,
+    title: "You earned activation points!",
+    body: "You've received {points} activation points. Use them on the Activation Apps page to unlock premium player apps for free.",
+    style: "info",
+  },
+  expiry_warning: {
+    enabled: true,
+    title: "Subscription expiring soon",
+    body: "Your subscription expires in {days} day(s). Renew now to avoid any interruption to your service.",
+    style: "warning",
+  },
+  expired: {
+    enabled: true,
+    title: "Subscription expired",
+    body: "Your subscription has expired. Renew now to keep enjoying your channels and movies.",
+    style: "error",
+  },
+};
+
+async function getAutoMessageTemplate(key: AutoMsgKey): Promise<AutoMsgTemplate> {
+  const setting = await db.getSetting(AUTO_MSG_SETTING_PREFIX + key);
+  if (setting?.value) {
+    try {
+      return { ...AUTO_MESSAGE_DEFAULTS[key], ...(JSON.parse(setting.value) as Partial<AutoMsgTemplate>) };
+    } catch {
+      /* fall through to defaults */
+    }
+  }
+  return AUTO_MESSAGE_DEFAULTS[key];
+}
+
 export const appRouter = router({
   system: systemRouter,
   
@@ -596,10 +642,46 @@ export const appRouter = router({
                 entityId: order.userId,
                 details: { orderId: input.orderId, connections: order.connections, points: pointsToGrant },
               });
+              // Auto message: points earned
+              try {
+                const tpl = await getAutoMessageTemplate("points");
+                if (tpl.enabled) {
+                  await db.createDashboardMessage({
+                    userId: order.userId,
+                    title: tpl.title || null,
+                    body: tpl.body.replace(/\{points\}/g, String(pointsToGrant)),
+                    style: tpl.style,
+                    isDismissible: true,
+                    isActive: true,
+                  });
+                }
+              } catch (e) {
+                console.error("Failed to create points message:", e);
+              }
             }
           }
         } catch (pointsError) {
           console.error("Failed to grant activation points:", pointsError);
+        }
+
+        // Auto message: account activated
+        try {
+          const order = await db.getOrderById(input.orderId);
+          if (order) {
+            const tpl = await getAutoMessageTemplate("account_activated");
+            if (tpl.enabled) {
+              await db.createDashboardMessage({
+                userId: order.userId,
+                title: tpl.title || null,
+                body: tpl.body,
+                style: tpl.style,
+                isDismissible: true,
+                isActive: true,
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Failed to create account-activated message:", e);
         }
         
         // Send payment verification email
@@ -1304,7 +1386,42 @@ export const appRouter = router({
   dashboardMessages: router({
     // Messages visible to the current user (global + targeted, minus dismissed)
     forMe: protectedProcedure.query(async ({ ctx }) => {
-      return db.getDashboardMessagesForUser(ctx.user.id);
+      const messages = await db.getDashboardMessagesForUser(ctx.user.id);
+
+      // Compute automatic expiry messages from the user's active credentials.
+      const extra: Array<{
+        id: number; title: string | null; body: string; style: AutoMsgStyle;
+        userId: number | null; isDismissible: boolean; isActive: boolean;
+        createdAt: Date; updatedAt: Date;
+      }> = [];
+      try {
+        const creds = await db.getCredentialsByUserId(ctx.user.id);
+        const active = creds.filter((c) => c.isActive && c.expiresAt);
+        if (active.length > 0) {
+          const soonest = active.reduce((min, c) =>
+            new Date(c.expiresAt as Date).getTime() < new Date(min.expiresAt as Date).getTime() ? c : min
+          );
+          const expMs = new Date(soonest.expiresAt as Date).getTime();
+          const now = Date.now();
+          const daysLeft = Math.ceil((expMs - now) / 86_400_000);
+          const mk = (id: number, t: AutoMsgTemplate, body: string) => ({
+            id, title: t.title || null, body, style: t.style,
+            userId: ctx.user.id, isDismissible: false, isActive: true,
+            createdAt: new Date(), updatedAt: new Date(),
+          });
+          if (expMs < now) {
+            const t = await getAutoMessageTemplate("expired");
+            if (t.enabled) extra.push(mk(-2, t, t.body));
+          } else if (daysLeft <= 3) {
+            const t = await getAutoMessageTemplate("expiry_warning");
+            if (t.enabled) extra.push(mk(-1, t, t.body.replace(/\{days\}/g, String(daysLeft))));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to compute expiry messages:", e);
+      }
+
+      return [...extra, ...messages];
     }),
 
     dismiss: protectedProcedure
@@ -1369,6 +1486,39 @@ export const appRouter = router({
           action: "delete_dashboard_message",
           entityType: "dashboard_message",
           entityId: input.id,
+        });
+        return { success: true };
+      }),
+  }),
+
+  // ============ AUTOMATIC MESSAGE TEMPLATES ============
+  autoMessages: router({
+    // Admin: read all 4 auto-message templates (merged with defaults)
+    get: adminProcedure.query(async () => {
+      const out: Record<string, AutoMsgTemplate> = {};
+      for (const k of AUTO_MESSAGE_KEYS) {
+        out[k] = await getAutoMessageTemplate(k);
+      }
+      return out;
+    }),
+
+    // Admin: update one template
+    update: adminProcedure
+      .input(z.object({
+        key: z.enum(["account_activated", "points", "expiry_warning", "expired"]),
+        enabled: z.boolean(),
+        title: z.string(),
+        body: z.string().min(1),
+        style: z.enum(["info", "success", "warning", "error"]),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { key, ...tpl } = input;
+        await db.setSetting(AUTO_MSG_SETTING_PREFIX + key, JSON.stringify(tpl), `Automatic message: ${key}`);
+        await db.createActivityLog({
+          userId: ctx.user.id,
+          action: "update_auto_message",
+          entityType: "setting",
+          details: { key },
         });
         return { success: true };
       }),

@@ -11,11 +11,21 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { trpc } from "@/lib/trpc";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MessageSquare, Plus, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { MessageSquare, Plus, MoreHorizontal, Edit, Trash2, Zap } from "lucide-react";
 
 type Style = "info" | "success" | "warning" | "error";
+
+const AUTO_KEYS = ["account_activated", "points", "expiry_warning", "expired"] as const;
+type AutoKey = (typeof AUTO_KEYS)[number];
+type AutoTpl = { enabled: boolean; title: string; body: string; style: Style };
+const AUTO_META: Record<AutoKey, { label: string; hint: string }> = {
+  account_activated: { label: "Account Activated", hint: "Sent automatically when an order is verified / the account is activated." },
+  points: { label: "Points Earned", hint: "Sent when activation points are granted. Use {points} for the amount." },
+  expiry_warning: { label: "Expiry Warning (3 days)", hint: "Shown when a subscription expires within 3 days. Use {days} for days left." },
+  expired: { label: "Subscription Expired", hint: "Shown automatically when a subscription has expired." },
+};
 
 const GLOBAL = "global";
 
@@ -89,6 +99,22 @@ export default function AdminMessages() {
   const [deleting, setDeleting] = useState<NonNullable<typeof messages>[0] | null>(null);
   const [form, setForm] = useState<MessageFormData>(defaultForm);
 
+  // Automatic message templates
+  const { data: autoMsgs } = trpc.autoMessages.get.useQuery();
+  const [autoForm, setAutoForm] = useState<Record<string, AutoTpl>>({});
+  useEffect(() => {
+    if (autoMsgs) setAutoForm(autoMsgs as Record<string, AutoTpl>);
+  }, [autoMsgs]);
+  const updateAuto = trpc.autoMessages.update.useMutation({
+    onSuccess: () => {
+      utils.autoMessages.get.invalidate();
+      toast.success("Automatic message saved");
+    },
+    onError: (e) => toast.error(e.message || "Failed to save"),
+  });
+  const setAuto = (key: AutoKey, patch: Partial<AutoTpl>) =>
+    setAutoForm((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+
   const handleEdit = (m: NonNullable<typeof messages>[0]) => {
     setEditing(m);
     setForm({
@@ -134,6 +160,71 @@ export default function AdminMessages() {
             New Message
           </Button>
         </div>
+
+        {/* Automatic messages */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-amber-500" />
+              Automatic Messages
+            </CardTitle>
+            <CardDescription>
+              These are sent to users automatically. Edit the text, style, or turn each one off.
+              Placeholders: <code>{"{points}"}</code> (points earned) and <code>{"{days}"}</code> (days until expiry).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {AUTO_KEYS.map((key) => {
+              const tpl = autoForm[key];
+              if (!tpl) return null;
+              return (
+                <div key={key} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-semibold">{AUTO_META[key].label}</div>
+                      <div className="text-xs text-muted-foreground">{AUTO_META[key].hint}</div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Switch checked={tpl.enabled} onCheckedChange={(c) => setAuto(key, { enabled: c })} />
+                      <Label className="text-sm">{tpl.enabled ? "On" : "Off"}</Label>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="sm:col-span-2 space-y-2">
+                      <Label>Title</Label>
+                      <Input value={tpl.title} onChange={(e) => setAuto(key, { title: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Style</Label>
+                      <Select value={tpl.style} onValueChange={(v) => setAuto(key, { style: v as Style })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="info">Info</SelectItem>
+                          <SelectItem value="success">Success</SelectItem>
+                          <SelectItem value="warning">Warning</SelectItem>
+                          <SelectItem value="error">Error</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Message</Label>
+                    <Textarea rows={2} value={tpl.body} onChange={(e) => setAuto(key, { body: e.target.value })} />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      disabled={updateAuto.isPending}
+                      onClick={() => updateAuto.mutate({ key, enabled: tpl.enabled, title: tpl.title, body: tpl.body, style: tpl.style })}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
