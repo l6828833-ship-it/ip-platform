@@ -92,7 +92,7 @@ function Router() {
   
   return (
     <Switch>
-      {/* Root path - public landing for visitors, dashboard for logged-in users */}
+      {/* Root path - always show the public homepage (logged-in users get a Dashboard button) */}
       <Route path="/">
         {() => {
           if (loading) {
@@ -105,7 +105,7 @@ function Router() {
               </div>
             );
           }
-          return isAuthenticated ? <Redirect to="/dashboard" /> : <LandingHome />;
+          return <LandingHome />;
         }}
       </Route>
 

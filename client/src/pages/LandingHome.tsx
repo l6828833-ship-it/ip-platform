@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import PublicAIChatWidget from "@/components/PublicAIChatWidget";
 
 /* Marketing homepage (public). White theme, live pricing from the real plans,
@@ -64,11 +65,16 @@ const DEVICES = [
 const CATEGORIES = ["⚽ Sports", "🎬 Movies", "📰 News", "🧒 Kids", "🕌 Arabic", "🇫🇷 French", "🎭 Entertainment", "📚 Documentary", "🎵 Music", "🏆 PPV Events", "🌍 International", "📺 4K Premium"];
 
 export default function LandingHome() {
+  const { isAuthenticated } = useAuth();
   const { data: plans } = trpc.plans.list.useQuery({ activeOnly: true });
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const tTrack = useRef<HTMLDivElement>(null);
+
+  // Where primary CTAs should point depending on auth state
+  const primaryHref = isAuthenticated ? "/dashboard" : "/login";
+  const primaryLabel = isAuthenticated ? "Go to Dashboard" : "Login / Sign Up";
 
   // Sticky navbar state
   useEffect(() => {
@@ -122,7 +128,11 @@ export default function LandingHome() {
             <a href="#faq">FAQ</a>
           </nav>
           <div className="nav-cta">
-            <Link href="/login" className="btn btn-outline">Login</Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard" className="btn btn-outline">Dashboard</Link>
+            ) : (
+              <Link href="/login" className="btn btn-outline">Login</Link>
+            )}
             <a href="#pricing" className="btn btn-primary">Get Started</a>
             <button className={`hamburger ${menuOpen ? "open" : ""}`} aria-label="Menu" onClick={() => setMenuOpen((v) => !v)}>
               <span></span><span></span><span></span>
@@ -138,7 +148,7 @@ export default function LandingHome() {
           <a href="#pricing">Pricing</a>
           <a href="#channels">Channels</a>
           <a href="#faq">FAQ</a>
-          <Link href="/login" className="btn btn-primary">Login / Sign Up</Link>
+          <Link href={primaryHref} className="btn btn-primary">{primaryLabel}</Link>
         </div>
       )}
 
@@ -150,7 +160,7 @@ export default function LandingHome() {
             <h1 className="reveal d1">Watch Anything.<br /><span className="grad">Anywhere. Anytime.</span></h1>
             <p className="lead reveal d2">Stream 50,000+ live channels and 200,000+ movies & series in crystal-clear 4K, HD & SD — on every device, with instant activation and a free premium player on yearly plans.</p>
             <div className="hero-ctas reveal d3">
-              <Link href="/login" className="btn btn-primary btn-lg">▶ Start Free Trial</Link>
+              <Link href={primaryHref} className="btn btn-primary btn-lg">▶ Start Free Trial</Link>
               <a href="#pricing" className="btn btn-outline btn-lg">View Plans</a>
             </div>
             <div className="hero-stats reveal d4">
@@ -381,7 +391,7 @@ export default function LandingHome() {
             <div>
               <h4>Company</h4>
               <div className="footer-links">
-                <a href="#features">Features</a><a href="#channels">Channels</a><a href="#reviews">Reviews</a><Link href="/login">Login</Link>
+                <a href="#features">Features</a><a href="#channels">Channels</a><a href="#reviews">Reviews</a>{isAuthenticated ? <Link href="/dashboard">Dashboard</Link> : <Link href="/login">Login</Link>}
               </div>
             </div>
           </div>
