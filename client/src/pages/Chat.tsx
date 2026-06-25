@@ -381,7 +381,7 @@ export default function Chat() {
                 <div className="flex-1 flex items-center justify-center text-muted-foreground p-4">
                   <div className="text-center">
                     <MessageCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <h3 className="font-semibold mb-2">Welcome to Support Chat</h3>
+                    <h3 className="font-semibold mb-2">Welcome to Support Tickets</h3>
                     <p className="text-sm mb-4">Select a conversation or start a new one</p>
                     <Button onClick={handleNewConversation}>
                       <Plus className="h-4 w-4 mr-2" />

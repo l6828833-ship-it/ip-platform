@@ -32,72 +32,12 @@ const staffProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
-const AI_SUPPORT_SENDER_ID = 0;
-
-const DEFAULT_AI_SUPPORT_PROMPT = `You are a helpful customer support assistant for an IPTV subscription service.
-Be friendly, concise, and professional. Reply in the same language the customer uses.
-You can help with general questions about plans, connections, supported devices, how to pay, and how activation points work.
-Do NOT invent order numbers, passwords, account credentials, prices, or promises about refunds.
-For anything involving a specific account, payment verification, refunds, or changing an order, tell the customer that a human support agent will follow up shortly.
+const DEFAULT_AI_CHAT_PROMPT = `You are a friendly customer support assistant for an IPTV subscription service.
+Be warm, concise, and professional. Reply in the same language the customer writes in.
+You can help with general questions about subscription plans, number of connections, supported devices (Smart TV, Android, iOS, Windows, MAG, etc.), how to pay (including crypto), and how activation points work.
+Do NOT invent order numbers, passwords, account credentials, exact prices, or promises about refunds.
+For anything that needs account access, payment verification, refunds, or changing an existing order, tell the customer to open a Support Ticket so a human agent can help.
 Keep answers short (1-4 sentences) unless the customer asks for detailed steps.`;
-
-/**
- * Generate an AI support reply for a conversation and store it as an "agent" message.
- * Runs fire-and-forget after a user posts a message. Safe to fail silently.
- */
-async function generateAiSupportReply(conversationId: number): Promise<void> {
-  // Disabled unless explicitly enabled and an API key is configured.
-  if (!ENV.aiSupportEnabled || !ENV.forgeApiKey) return;
-
-  const msgs = await db.getMessagesByConversationId(conversationId);
-  if (!msgs.length) return;
-
-  // If a human staff member (agent/admin with a real senderId) has joined the
-  // conversation, step aside and let the human handle it.
-  const humanJoined = msgs.some(
-    m =>
-      (m.senderRole === "admin" || m.senderRole === "agent") &&
-      m.senderId !== AI_SUPPORT_SENDER_ID
-  );
-  if (humanJoined) return;
-
-  // The most recent message must be from the user (don't reply to ourselves).
-  const last = msgs[msgs.length - 1];
-  if (!last || last.senderRole !== "user") return;
-
-  // Build a short rolling history for context.
-  const history = msgs.slice(-20).map(m => ({
-    role: (m.senderRole === "user" ? "user" : "assistant") as "user" | "assistant",
-    content: m.message,
-  }));
-
-  const systemPrompt =
-    ENV.aiSupportPrompt && ENV.aiSupportPrompt.trim().length > 0
-      ? ENV.aiSupportPrompt
-      : DEFAULT_AI_SUPPORT_PROMPT;
-
-  const result = await invokeLLM({
-    messages: [{ role: "system", content: systemPrompt }, ...history],
-    maxTokens: 600,
-  });
-
-  const content = result.choices?.[0]?.message?.content;
-  const text =
-    typeof content === "string"
-      ? content
-      : Array.isArray(content)
-        ? content.map(p => ("text" in p ? p.text : "")).join("")
-        : "";
-
-  if (!text.trim()) return;
-
-  await db.createMessage({
-    conversationId,
-    senderId: AI_SUPPORT_SENDER_ID,
-    senderRole: "agent",
-    message: text.trim(),
-  });
-}
 
 export const appRouter = router({
   system: systemRouter,
@@ -864,17 +804,6 @@ export const appRouter = router({
         }
         // --- END NEW EMAIL NOTIFICATION LOGIC ---
 
-        // --- AI SUPPORT AUTO-REPLY (fire-and-forget) ---
-        // When a customer sends a message, let the AI assistant respond.
-        // It no-ops unless enabled via env and an API key is set, and it steps
-        // aside automatically once a human agent has joined the conversation.
-        if (ctx.user.role === 'user') {
-            generateAiSupportReply(input.conversationId).catch(err => {
-                console.error('[AI support] auto-reply failed:', err);
-            });
-        }
-        // --- END AI SUPPORT AUTO-REPLY ---
-
         return { success: true, id };
       }),
 
@@ -934,6 +863,61 @@ export const appRouter = router({
       .input(z.object({ userId: z.number(), limit: z.number().min(1).max(100).default(50) }))
       .query(async ({ input }) => {
         return db.getActivityLogsByUserId(input.userId, input.limit);
+      }),
+  }),
+
+  // ============ AI ASSISTANT (chat) ============
+  ai: router({
+    // Lightweight config the user chat page can read (no admin role required).
+    config: protectedProcedure.query(async () => {
+      const setting = await db.getSetting("ai_chat_enabled");
+      const enabled = setting?.value === "true";
+      return { enabled: enabled && Boolean(ENV.forgeApiKey) };
+    }),
+
+    // Generate an AI reply. Stateless: the client sends the running message
+    // history and we return the assistant's text. Only the AI replies here.
+    chat: protectedProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.enum(["system", "user", "assistant"]),
+          content: z.string(),
+        })).min(1).max(50),
+      }))
+      .mutation(async ({ input }) => {
+        const setting = await db.getSetting("ai_chat_enabled");
+        if (setting?.value !== "true") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "The AI assistant is currently disabled." });
+        }
+        if (!ENV.forgeApiKey) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The AI assistant is not configured yet." });
+        }
+
+        const promptSetting = await db.getSetting("ai_chat_prompt");
+        const systemPrompt =
+          promptSetting?.value && promptSetting.value.trim().length > 0
+            ? promptSetting.value
+            : DEFAULT_AI_CHAT_PROMPT;
+
+        // Ignore any client-supplied system messages; we control the persona.
+        const userMessages = input.messages
+          .filter(m => m.role !== "system")
+          .slice(-30);
+
+        const result = await invokeLLM({
+          messages: [{ role: "system", content: systemPrompt }, ...userMessages],
+          maxTokens: 800,
+        });
+
+        const content = result.choices?.[0]?.message?.content;
+        const text =
+          typeof content === "string"
+            ? content
+            : Array.isArray(content)
+              ? content.map(p => ("text" in p ? p.text : "")).join("")
+              : "";
+
+        return { content: text.trim() || "Sorry, I couldn't generate a response. Please try again." };
       }),
   }),
 
