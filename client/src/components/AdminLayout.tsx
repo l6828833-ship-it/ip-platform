@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
+import { trpc } from "@/lib/trpc";
 import { 
   LayoutDashboard, 
   Users, 
@@ -134,6 +135,22 @@ function AdminLayoutContent({ children, setSidebarWidth }: AdminLayoutContentPro
   const activeMenuItem = adminMenuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
+  // ----- Notification badge counts (refetch periodically so they stay live) -----
+  const refetchOpts = { refetchInterval: 30000, refetchOnWindowFocus: true } as const;
+  const { data: pendingOrders } = trpc.orders.list.useQuery({ status: "pending" }, refetchOpts);
+  const { data: pendingActivations } = trpc.activations.adminList.useQuery({ status: "pending" }, refetchOpts);
+  const { data: adminUnread } = trpc.chat.getAdminUnreadCounts.useQuery(undefined, refetchOpts);
+
+  const unreadChatCount = adminUnread
+    ? Object.values(adminUnread).reduce((sum, n) => sum + Number(n), 0)
+    : 0;
+
+  const badgeCounts: Record<string, number> = {
+    "/admin/orders": pendingOrders?.length ?? 0,
+    "/admin/activations": pendingActivations?.length ?? 0,
+    "/admin/chat": unreadChatCount,
+  };
+
   useEffect(() => {
     if (isCollapsed) {
       setIsResizing(false);
@@ -211,8 +228,9 @@ function AdminLayoutContent({ children, setSidebarWidth }: AdminLayoutContentPro
               
               {adminMenuItems.map(item => {
                 const isActive = location === item.path;
+                const count = badgeCounts[item.path] ?? 0;
                 return (
-                  <SidebarMenuItem key={item.path}>
+                  <SidebarMenuItem key={item.path} className="relative">
                     <SidebarMenuButton
                       isActive={isActive}
                       onClick={() => setLocation(item.path)}
@@ -221,7 +239,15 @@ function AdminLayoutContent({ children, setSidebarWidth }: AdminLayoutContentPro
                     >
                       <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
                       <span>{item.label}</span>
+                      {count > 0 && (
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-semibold text-white group-data-[collapsible=icon]:hidden">
+                          {count > 99 ? "99+" : count}
+                        </span>
+                      )}
                     </SidebarMenuButton>
+                    {count > 0 && (
+                      <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-sidebar hidden group-data-[collapsible=icon]:block" />
+                    )}
                   </SidebarMenuItem>
                 );
               })}
