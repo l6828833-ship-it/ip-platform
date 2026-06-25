@@ -299,7 +299,7 @@ export default function Dashboard() {
 
   {/* Free Trial Chat */}
   <a
-    href="https://members.iptvtop.live/chat"
+    href="/chat"
     target="_blank"
     rel="noopener noreferrer"
   >
@@ -309,21 +309,6 @@ export default function Dashboard() {
     >
       <MessageCircle className="mr-2 h-4 w-4" />
       Request Free Trial 24H
-    </Button>
-  </a>
-
-  {/* Tutorial */}
-  <a
-    href="https://revsfr.com/iptv-guide/"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <Button
-      variant="outline"
-      className="border-blue-500 text-blue-600 hover:bg-blue-50"
-    >
-      <BookOpen className="mr-2 h-4 w-4" />
-      Tutorial
     </Button>
   </a>
 </div>
