@@ -8,12 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { 
   Mail, 
   Edit,
-  Eye
+  Eye,
+  Globe
 } from "lucide-react";
 
 type TemplateFormData = {
@@ -47,6 +48,35 @@ export default function AdminEmailTemplates() {
   const [editingTemplate, setEditingTemplate] = useState<NonNullable<typeof templates>[0] | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<NonNullable<typeof templates>[0] | null>(null);
   const [templateForm, setTemplateForm] = useState<TemplateFormData>(defaultTemplateForm);
+
+  // ---- Email branding & links (stored in site settings) ----
+  const siteNameQ = trpc.settings.get.useQuery({ key: "email_site_name" });
+  const baseUrlQ = trpc.settings.get.useQuery({ key: "email_base_url" });
+  const supportUrlQ = trpc.settings.get.useQuery({ key: "email_support_url" });
+  const plansUrlQ = trpc.settings.get.useQuery({ key: "email_plans_url" });
+  const [brand, setBrand] = useState({ siteName: "", baseUrl: "", supportUrl: "", plansUrl: "" });
+  useEffect(() => {
+    setBrand({
+      siteName: siteNameQ.data?.value ?? "",
+      baseUrl: baseUrlQ.data?.value ?? "",
+      supportUrl: supportUrlQ.data?.value ?? "",
+      plansUrl: plansUrlQ.data?.value ?? "",
+    });
+  }, [siteNameQ.data, baseUrlQ.data, supportUrlQ.data, plansUrlQ.data]);
+  const setSetting = trpc.settings.set.useMutation();
+  const saveBranding = async () => {
+    try {
+      await Promise.all([
+        setSetting.mutateAsync({ key: "email_site_name", value: brand.siteName.trim(), description: "Website name shown in emails" }),
+        setSetting.mutateAsync({ key: "email_base_url", value: brand.baseUrl.trim(), description: "Base URL for links in emails" }),
+        setSetting.mutateAsync({ key: "email_support_url", value: brand.supportUrl.trim(), description: "Support link in emails" }),
+        setSetting.mutateAsync({ key: "email_plans_url", value: brand.plansUrl.trim(), description: "Plans link in emails" }),
+      ]);
+      toast.success("Email branding saved");
+    } catch {
+      toast.error("Failed to save branding");
+    }
+  };
   
   const handleEditTemplate = (template: NonNullable<typeof templates>[0]) => {
     setEditingTemplate(template);
@@ -103,7 +133,62 @@ export default function AdminEmailTemplates() {
           <h1 className="text-2xl font-bold">Email Templates</h1>
           <p className="text-muted-foreground">Customize email notifications</p>
         </div>
-        
+
+        {/* Branding & Links */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Branding &amp; Links
+            </CardTitle>
+            <CardDescription>
+              The website name and links used in all emails. Leave the Plans/Support links empty to build them automatically from the Base URL.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-2xl">
+            <div className="space-y-2">
+              <Label>Website name</Label>
+              <Input
+                value={brand.siteName}
+                onChange={(e) => setBrand((p) => ({ ...p, siteName: e.target.value }))}
+                placeholder="e.g. IPTV TOP"
+              />
+              <p className="text-xs text-muted-foreground">Shown in the email header, footer, and as the sender name.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Base URL</Label>
+                <Input
+                  value={brand.baseUrl}
+                  onChange={(e) => setBrand((p) => ({ ...p, baseUrl: e.target.value }))}
+                  placeholder="https://members.yourdomain.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Plans link</Label>
+                <Input
+                  value={brand.plansUrl}
+                  onChange={(e) => setBrand((p) => ({ ...p, plansUrl: e.target.value }))}
+                  placeholder="(defaults to Base URL + /plans)"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Support link</Label>
+              <Input
+                value={brand.supportUrl}
+                onChange={(e) => setBrand((p) => ({ ...p, supportUrl: e.target.value }))}
+                placeholder="(defaults to Base URL + /chat)"
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={saveBranding} disabled={setSetting.isPending}>
+                {setSetting.isPending ? "Saving..." : "Save branding"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Info Card */}
         <Card className="border-blue-500/20 bg-blue-500/5">
           <CardContent className="p-4">
