@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Slider } from "@/components/ui/slider";
+import { useState } from "react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { 
@@ -27,6 +29,7 @@ import {
   FileText,
   AlertCircle,
   Coins,
+  Users,
   X
 } from "lucide-react";
 import { format } from "date-fns";
@@ -44,6 +47,19 @@ export default function Dashboard() {
   });
 
   const activationPoints = pointsData?.points ?? 0;
+
+  // Per-plan connection selection for the inline plans (matches /plans page)
+  const [planConnections, setPlanConnections] = useState<Record<number, number>>({});
+  const getPlanConnections = (planId: number) => planConnections[planId] || 1;
+  const handlePlanConnectionChange = (planId: number, v: number[]) =>
+    setPlanConnections((prev) => ({ ...prev, [planId]: v[0] }));
+  const getPlanPrice = (plan: NonNullable<typeof plans>[number], connections: number) =>
+    plan.pricing?.find((p) => p.connections === connections)?.price || "0.00";
+  const getPlanPoints = (plan: NonNullable<typeof plans>[number], connections: number) => {
+    const tier = plan.pricing?.find((p) => p.connections === connections);
+    const tp = (tier as { points?: number } | undefined)?.points ?? 0;
+    return tp > 0 ? tp : ((plan as { activationPoints?: number }).activationPoints ?? 0);
+  };
   
   const pendingOrders = orders?.filter(o => o.status === "pending").length || 0;
   const activeCredentials = credentials?.filter(c => c.isActive).length || 0;
@@ -436,13 +452,11 @@ export default function Dashboard() {
                       Pick a subscription to activate your IPTV access
                     </p>
                   </div>
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                     {plans.map((plan, index) => {
-                      const pricing = plan.pricing
-                        ?.slice()
-                        .sort((a, b) => a.connections - b.connections);
-                      const startingPrice = pricing?.[0]?.price ?? "0.00";
-                      const startingConnections = pricing?.[0]?.connections ?? 1;
+                      const connections = getPlanConnections(plan.id);
+                      const price = getPlanPrice(plan, connections);
+                      const points = getPlanPoints(plan, connections);
                       const isPopular = index === 1;
 
                       return (
@@ -461,16 +475,39 @@ export default function Dashboard() {
                             <CardTitle className="text-xl">{plan.name}</CardTitle>
                             <CardDescription>{plan.description}</CardDescription>
                           </CardHeader>
-                          <CardContent className="space-y-4">
+                          <CardContent className="space-y-5">
                             <div className="text-center">
                               <div className="flex items-baseline justify-center gap-1">
-                                <span className="text-xs text-muted-foreground">from</span>
-                                <span className="text-3xl font-bold">${startingPrice}</span>
+                                <span className="text-3xl font-bold">${price}</span>
                                 <span className="text-muted-foreground">/{plan.durationDays} days</span>
                               </div>
                             </div>
+
+                            {/* Connection slider */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Connections</span>
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-4 w-4 text-primary" />
+                                  <span className="font-bold text-primary">{connections}</span>
+                                </div>
+                              </div>
+                              <Slider
+                                value={[connections]}
+                                onValueChange={(v) => handlePlanConnectionChange(plan.id, v)}
+                                min={1}
+                                max={plan.maxConnections}
+                                step={1}
+                                className="w-full"
+                              />
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>1</span>
+                                <span>{plan.maxConnections}</span>
+                              </div>
+                            </div>
+
                             <div className="space-y-2">
-                              {((plan.features as string[]) || []).slice(0, 4).map((feature, i) => (
+                              {((plan.features as string[]) || []).slice(0, 6).map((feature, i) => (
                                 <div key={i} className="flex items-center gap-2 text-sm">
                                   <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                                   <span>{feature}</span>
@@ -478,15 +515,24 @@ export default function Dashboard() {
                               ))}
                               <div className="flex items-center gap-2 text-sm">
                                 <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                                <span>Up to {plan.maxConnections} connections</span>
+                                <span>{connections} simultaneous {connections === 1 ? "device" : "devices"}</span>
                               </div>
                               <div className="flex items-center gap-2 text-sm">
                                 <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                                 <span>{plan.durationDays} days validity</span>
                               </div>
+                              {points > 0 && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Coins className="h-4 w-4 text-amber-500 shrink-0" />
+                                  <span>
+                                    <strong>{points}</strong> activation {points === 1 ? "point" : "points"} for {connections} {connections === 1 ? "connection" : "connections"}
+                                  </span>
+                                </div>
+                              )}
                             </div>
+
                             <Link
-                              href={`/checkout/${plan.id}?connections=${startingConnections}`}
+                              href={`/checkout/${plan.id}?connections=${connections}`}
                               className="block"
                             >
                               <Button
