@@ -92,21 +92,9 @@ function Router() {
   
   return (
     <Switch>
-      {/* Root path - always show the public homepage (logged-in users get a Dashboard button) */}
+      {/* Root path - always show the public homepage immediately (no auth-loading spinner) */}
       <Route path="/">
-        {() => {
-          if (loading) {
-            return (
-              <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-10 h-10 spinner" />
-                  <p className="text-muted-foreground">Loading...</p>
-                </div>
-              </div>
-            );
-          }
-          return <LandingHome />;
-        }}
+        {() => <LandingHome />}
       </Route>
 
       {/* Login / Sign up */}
