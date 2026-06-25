@@ -242,77 +242,6 @@ export default function LandingHome() {
         </div>
       </section>
 
-      {/* BENEFITS */}
-      <section className="how" id="benefits">
-        <div className="container">
-          <div className="section-head reveal">
-            <span className="eyebrow">Why Switch</span>
-            <h2>Why Viewers Move to IPTV TOP</h2>
-            <p>Most people switch for one reason: a better picture for less money. Here's what you get with our IPTV service.</p>
-          </div>
-          <div className="benefits-grid">
-            {BENEFITS.map((b, i) => (
-              <div className={`benefit reveal d${(i % 4) + 1}`} key={i}>
-                <h3>{b.t}</h3>
-                <p>{b.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SERVER STATISTICS */}
-      <section className="channels" id="stats">
-        <div className="container">
-          <div className="section-head reveal">
-            <span className="eyebrow">By the Numbers</span>
-            <h2>Built for Reliability</h2>
-            <p>A top IPTV service depends on its servers. Here's what keeps IPTV TOP steady.</p>
-          </div>
-          <div className="count-row">
-            <div className="count-box reveal d1"><strong>99.9%</strong><span>Network uptime</span></div>
-            <div className="count-box reveal d2"><strong>4K</strong><span>Ultra HD streaming</span></div>
-            <div className="count-box reveal d3"><strong>60+</strong><span>Countries covered</span></div>
-            <div className="count-box reveal d4"><strong>24/7</strong><span>Human support</span></div>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section className="how" id="how">
-        <div className="container">
-          <div className="section-head reveal">
-            <span className="eyebrow">Get Started in Minutes</span>
-            <h2>How It Works</h2>
-            <p>From sign-up to streaming in three simple steps.</p>
-          </div>
-          <div className="steps">
-            <div className="step reveal d1"><div className="step-num">1</div><div className="step-ic">🧾</div><h3>Choose Your Plan</h3><p>Pick the subscription length and number of connections that fit your household.</p></div>
-            <div className="step reveal d2"><div className="step-num">2</div><div className="step-ic">💳</div><h3>Complete Payment</h3><p>Pay instantly with crypto, or use card / PayPal verified quickly by our support team.</p></div>
-            <div className="step reveal d3"><div className="step-num">3</div><div className="step-ic">🚀</div><h3>Start Watching</h3><p>Receive your credentials on your dashboard and start streaming instantly on any device.</p></div>
-          </div>
-          <div className="reveal" style={{ textAlign: "center", marginTop: "44px" }}>
-            <a href="#pricing" className="btn btn-primary btn-lg">See Plans &amp; Pricing</a>
-          </div>
-        </div>
-      </section>
-
-      {/* DEVICES */}
-      <section className="devices" id="devices">
-        <div className="container">
-          <div className="section-head reveal">
-            <span className="eyebrow">Watch Your Way</span>
-            <h2>Works on All Your Devices</h2>
-            <p>One subscription, every screen. Stream on multiple devices at once.</p>
-          </div>
-          <div className="device-grid">
-            {DEVICES.map((d, i) => (
-              <div className={`device reveal d${(i % 4) + 1}`} key={i}><span className="emoji">{d.e}</span>{d.n}</div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* PRICING (live plans — same shape as /plans) */}
       <section className="pricing" id="pricing">
         <div className="container">
@@ -430,6 +359,77 @@ export default function LandingHome() {
               })}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* BENEFITS */}
+      <section className="how" id="benefits">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">Why Switch</span>
+            <h2>Why Viewers Move to IPTV TOP</h2>
+            <p>Most people switch for one reason: a better picture for less money. Here's what you get with our IPTV service.</p>
+          </div>
+          <div className="benefits-grid">
+            {BENEFITS.map((b, i) => (
+              <div className={`benefit reveal d${(i % 4) + 1}`} key={i}>
+                <h3>{b.t}</h3>
+                <p>{b.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SERVER STATISTICS */}
+      <section className="channels" id="stats">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">By the Numbers</span>
+            <h2>Built for Reliability</h2>
+            <p>A top IPTV service depends on its servers. Here's what keeps IPTV TOP steady.</p>
+          </div>
+          <div className="count-row">
+            <div className="count-box reveal d1"><strong>99.9%</strong><span>Network uptime</span></div>
+            <div className="count-box reveal d2"><strong>4K</strong><span>Ultra HD streaming</span></div>
+            <div className="count-box reveal d3"><strong>60+</strong><span>Countries covered</span></div>
+            <div className="count-box reveal d4"><strong>24/7</strong><span>Human support</span></div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="how" id="how">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">Get Started in Minutes</span>
+            <h2>How It Works</h2>
+            <p>From sign-up to streaming in three simple steps.</p>
+          </div>
+          <div className="steps">
+            <div className="step reveal d1"><div className="step-num">1</div><div className="step-ic">🧾</div><h3>Choose Your Plan</h3><p>Pick the subscription length and number of connections that fit your household.</p></div>
+            <div className="step reveal d2"><div className="step-num">2</div><div className="step-ic">💳</div><h3>Complete Payment</h3><p>Pay instantly with crypto, or use card / PayPal verified quickly by our support team.</p></div>
+            <div className="step reveal d3"><div className="step-num">3</div><div className="step-ic">🚀</div><h3>Start Watching</h3><p>Receive your credentials on your dashboard and start streaming instantly on any device.</p></div>
+          </div>
+          <div className="reveal" style={{ textAlign: "center", marginTop: "44px" }}>
+            <a href="#pricing" className="btn btn-primary btn-lg">See Plans &amp; Pricing</a>
+          </div>
+        </div>
+      </section>
+
+      {/* DEVICES */}
+      <section className="devices" id="devices">
+        <div className="container">
+          <div className="section-head reveal">
+            <span className="eyebrow">Watch Your Way</span>
+            <h2>Works on All Your Devices</h2>
+            <p>One subscription, every screen. Stream on multiple devices at once.</p>
+          </div>
+          <div className="device-grid">
+            {DEVICES.map((d, i) => (
+              <div className={`device reveal d${(i % 4) + 1}`} key={i}><span className="emoji">{d.e}</span>{d.n}</div>
+            ))}
+          </div>
         </div>
       </section>
 
