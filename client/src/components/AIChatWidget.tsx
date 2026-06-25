@@ -90,6 +90,7 @@ export default function AIChatWidget() {
       <Button
         size="lg"
         onClick={() => setOpen((v) => !v)}
+        data-tour="ai-agent"
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90 transition-opacity z-50"
         aria-label={open ? "Close chat" : "Open live chat"}
       >
