@@ -341,7 +341,7 @@ export default function LandingHome() {
                 const hiddenCount = allFeatures.length - FEATURES_PREVIEW_COUNT;
 
                 return (
-                  <Card key={plan.id} className={`relative card-hover h-full flex flex-col shadow-lg ${isPopular ? "border-primary shadow-primary/10" : ""}`}>
+                  <Card key={plan.id} className={`relative card-hover ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}>
                     {plan.promoText && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
                         <Badge className="bg-red-500 hover:bg-red-600 text-white">{plan.promoText}</Badge>
@@ -352,7 +352,7 @@ export default function LandingHome() {
                       <CardDescription>{plan.description}</CardDescription>
                     </CardHeader>
 
-                    <CardContent className="space-y-6 flex-1">
+                    <CardContent className="space-y-6">
                       <div className="text-center">
                         <div className="flex items-baseline justify-center gap-1">
                           <span className="text-4xl font-bold">${price}</span>
@@ -721,7 +721,7 @@ const css = `
 .lp .device:hover { transform:translateY(-6px); box-shadow:var(--shadow); border-color:rgba(37,99,235,.35); }
 .lp .device .emoji { font-size:2.3rem; }
 
-.lp .pricing { padding:100px 0; background:var(--bg-soft); }
+.lp .pricing { padding:100px 0; background:#fff; }
 .lp .plans { display:grid; grid-template-columns:repeat(4,1fr); gap:22px; align-items:stretch; }
 .lp .plan { display:flex; flex-direction:column; background:#fff; border-radius:var(--radius); border:1px solid rgba(37,99,235,.14); padding:30px 26px; position:relative; transition:transform .3s,box-shadow .3s; }
 .lp .plan:hover { transform:translateY(-8px); box-shadow:var(--shadow); }
@@ -737,12 +737,6 @@ const css = `
 .lp .plan li .ck { color:var(--blue-600); font-weight:800; }
 .lp .plan .btn { margin-top:auto; }
 .lp .pl-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:24px; align-items:stretch; }
-/* Force a clear, premium card look on the shadcn pricing cards (they were white-on-white) */
-.lp .pl-grid [data-slot="card"] { background:#fff; border:1px solid rgba(37,99,235,.16); border-radius:18px; box-shadow:0 14px 36px -20px rgba(10,22,40,.30); transition:transform .3s, box-shadow .3s; }
-.lp .pl-grid [data-slot="card"]:hover { transform:translateY(-6px); box-shadow:0 22px 52px -22px rgba(10,22,40,.36); }
-.lp .pl-grid [data-slot="card"][class*="border-primary"] { border:2px solid var(--blue-600); box-shadow:0 18px 46px -18px rgba(37,99,235,.45); }
-.lp .pl-grid [data-slot="card-footer"] > a { display:block; width:100%; }
-.lp .pl-grid [data-slot="card-footer"] button { width:100%; height:auto; padding:13px 20px; font-weight:600; border-radius:10px; }
 
 .lp .channels { padding:100px 0; background:var(--bg-soft); }
 .lp .count-row { display:flex; justify-content:center; gap:50px; flex-wrap:wrap; margin-bottom:50px; }
