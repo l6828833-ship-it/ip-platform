@@ -1404,17 +1404,25 @@ export const appRouter = router({
           const expMs = new Date(soonest.expiresAt as Date).getTime();
           const now = Date.now();
           const daysLeft = Math.ceil((expMs - now) / 86_400_000);
+
+          // Period-aware ids so a dismissal sticks for THIS expiry date, but a
+          // new subscription cycle (different expiry) will show again.
+          const dayNum = Math.floor(expMs / 86_400_000);
+          const warnId = -(1_000_000 + dayNum);
+          const expId = -(2_000_000 + dayNum);
+
+          const dismissed = new Set(await db.getDismissedMessageIds(ctx.user.id));
           const mk = (id: number, t: AutoMsgTemplate, body: string) => ({
             id, title: t.title || null, body, style: t.style,
-            userId: ctx.user.id, isDismissible: false, isActive: true,
+            userId: ctx.user.id, isDismissible: true, isActive: true,
             createdAt: new Date(), updatedAt: new Date(),
           });
           if (expMs < now) {
             const t = await getAutoMessageTemplate("expired");
-            if (t.enabled) extra.push(mk(-2, t, t.body));
+            if (t.enabled && !dismissed.has(expId)) extra.push(mk(expId, t, t.body));
           } else if (daysLeft <= 3) {
             const t = await getAutoMessageTemplate("expiry_warning");
-            if (t.enabled) extra.push(mk(-1, t, t.body.replace(/\{days\}/g, String(daysLeft))));
+            if (t.enabled && !dismissed.has(warnId)) extra.push(mk(warnId, t, t.body.replace(/\{days\}/g, String(daysLeft))));
           }
         }
       } catch (e) {

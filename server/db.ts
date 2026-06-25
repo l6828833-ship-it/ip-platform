@@ -784,6 +784,16 @@ export async function getDashboardMessagesForUser(userId: number) {
   return messages.filter(m => !dismissedIds.has(m.id));
 }
 
+// All message ids the user has dismissed (used for synthetic/auto messages too)
+export async function getDismissedMessageIds(userId: number): Promise<number[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ messageId: dashboardMessageDismissals.messageId })
+    .from(dashboardMessageDismissals)
+    .where(eq(dashboardMessageDismissals.userId, userId));
+  return rows.map(r => r.messageId);
+}
+
 export async function dismissDashboardMessage(messageId: number, userId: number) {
   const db = await getDb();
   if (!db) return;
