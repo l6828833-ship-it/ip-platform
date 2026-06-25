@@ -53,8 +53,8 @@ export default function AIChatWidget() {
             <div className="flex items-center gap-2 min-w-0">
               <Sparkles className="h-5 w-5 shrink-0" />
               <div className="min-w-0">
-                <p className="font-semibold leading-none truncate">AI Assistant</p>
-                <p className="text-[11px] opacity-90 mt-0.5">Instant answers, 24/7</p>
+                <p className="font-semibold leading-none truncate">Live Agent</p>
+                <p className="text-[11px] opacity-90 mt-0.5">We're online to help</p>
               </div>
             </div>
             <button
@@ -91,7 +91,7 @@ export default function AIChatWidget() {
         size="lg"
         onClick={() => setOpen((v) => !v)}
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg gradient-primary hover:opacity-90 transition-opacity z-50"
-        aria-label={open ? "Close AI chat" : "Open AI chat"}
+        aria-label={open ? "Close chat" : "Open live chat"}
       >
         {open ? <X className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
       </Button>
