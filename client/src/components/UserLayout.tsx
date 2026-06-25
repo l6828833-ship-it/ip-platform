@@ -166,6 +166,7 @@ function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps
                       isActive={isActive}
                       onClick={() => setLocation(item.path)}
                       tooltip={item.label}
+                      data-tour={item.path}
                       className="h-10 transition-all font-normal"
                     >
                       <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
