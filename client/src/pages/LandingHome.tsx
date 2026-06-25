@@ -277,7 +277,17 @@ export default function LandingHome() {
                       </div>
                     )}
                     <CardHeader className="text-center pb-2">
-                      <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      <CardTitle className="text-xl flex items-center justify-center gap-2">
+                        {plan.name}
+                        {points > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <span className="p-1.5 rounded-lg bg-amber-500/10 inline-flex">
+                              <Coins className="h-5 w-5 text-amber-500" />
+                            </span>
+                            <span className="text-amber-600 font-bold">+{points}</span>
+                          </span>
+                        )}
+                      </CardTitle>
                       <CardDescription>{plan.description}</CardDescription>
                     </CardHeader>
 
