@@ -142,9 +142,12 @@ export default function Plans() {
                     <CardTitle className="text-xl flex items-center justify-center gap-2">
                       {plan.name}
                       {points > 0 && (
-                        <Badge className="bg-amber-500 hover:bg-amber-600 text-white gap-1 px-2 py-0.5">
-                          <Coins className="h-3 w-3" />+{points}
-                        </Badge>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="p-1.5 rounded-lg bg-amber-500/10 inline-flex">
+                            <Coins className="h-5 w-5 text-amber-500" />
+                          </span>
+                          <span className="text-amber-600 font-bold">+{points}</span>
+                        </span>
                       )}
                     </CardTitle>
                     <CardDescription>{plan.description}</CardDescription>
