@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPTV TOP — Premium IPTV Service | 50,000+ Live Channels in 4K</title>
+  <meta name="description" content="IPTV TOP is a premium iptv provider and iptv service offering 50,000+ live channels and 200,000+ movies & series in stunning 4K, HD & SD. Watch on any device with instant activation." />
+  <meta name="keywords" content="iptv provider, iptv service, iptv subscription, 4k iptv, live tv, vod, smart tv iptv" />
+  <meta name="theme-color" content="#0A1628" />
+
+  <!-- Open Graph / SEO -->
+  <meta property="og:title" content="IPTV TOP — Premium IPTV Service 2026" />
+  <meta property="og:description" content="50,000+ live channels & 200,000+ VOD in 4K. The best iptv provider for every device." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts: Inter + Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS (CSS custom properties)
+       ============================================================ */
+    :root {
+      --white: #FFFFFF;
+      --blue-950: #0A1628;   /* deepest background */
+      --blue-900: #0c1f3a;
+      --blue-800: #1E3A8A;
+      --blue-600: #2563EB;   /* primary accent */
+      --blue-400: #60A5FA;
+      --blue-300: #93C5FD;
+
+      --text: #0A1628;
+      --text-muted: #5b6b85;
+      --text-on-dark: #e8eefc;
+      --text-on-dark-muted: #9fb3d6;
+
+      --bg: #ffffff;
+      --bg-soft: #f4f7fe;
+
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.14);
+
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow: 0 20px 50px -20px rgba(10, 22, 40, 0.45);
+      --shadow-glow: 0 12px 40px -8px rgba(37, 99, 235, 0.6);
+
+      --gradient-primary: linear-gradient(135deg, #2563EB 0%, #1E3A8A 100%);
+      --gradient-hero: radial-gradient(1200px 600px at 70% -10%, rgba(37,99,235,0.35), transparent 60%),
+                       radial-gradient(900px 500px at 10% 20%, rgba(30,58,138,0.4), transparent 55%),
+                       linear-gradient(180deg, #0A1628 0%, #0c1f3a 100%);
+
+      --max: 1200px;
+      --nav-h: 72px;
+    }
+
+    /* ============================================================
+       RESET / BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, .display { font-family: 'Poppins', 'Inter', sans-serif; line-height: 1.15; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    ul { list-style: none; }
+    section { position: relative; }
+
+    .container { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 22px; }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: .8rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--blue-600); background: rgba(37,99,235,.1);
+      padding: 7px 14px; border-radius: 999px; margin-bottom: 18px;
+    }
+    .eyebrow.on-dark { color: var(--blue-300); background: rgba(96,165,250,.12); border: 1px solid rgba(96,165,250,.2); }
+
+    .section-head { max-width: 680px; margin: 0 auto 54px; text-align: center; }
+    .section-head h2 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; margin-bottom: 14px; }
+    .section-head p { color: var(--text-muted); font-size: 1.05rem; }
+    .on-dark .section-head h2 { color: var(--white); }
+    .on-dark .section-head p { color: var(--text-on-dark-muted); }
+
+    /* ============================================================
+       BUTTONS
+       ============================================================ */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      font-family: 'Inter', sans-serif; font-weight: 600; font-size: 1rem;
+      padding: 14px 26px; border-radius: 999px; border: none; cursor: pointer;
+      transition: transform .25s ease, box-shadow .25s ease, background .25s ease, color .25s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--gradient-primary); color: #fff;
+      box-shadow: 0 8px 24px -8px rgba(37,99,235,.7);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 16px 38px -8px rgba(37,99,235,.95); }
+    .btn-ghost {
+      background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.25);
+      backdrop-filter: blur(8px);
+    }
+    .btn-ghost:hover { transform: translateY(-3px); background: rgba(255,255,255,.16); }
+    .btn-light { background: #fff; color: var(--blue-800); box-shadow: var(--shadow); }
+    .btn-light:hover { transform: translateY(-3px); }
+    .btn-lg { padding: 17px 34px; font-size: 1.05rem; }
+
+    /* ============================================================
+       1. NAVBAR (sticky)
+       ============================================================ */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      height: var(--nav-h); display: flex; align-items: center;
+      transition: background .35s ease, box-shadow .35s ease, backdrop-filter .35s ease;
+      background: transparent;
+    }
+    .navbar.scrolled {
+      background: rgba(10,22,40,.85);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 6px 30px -12px rgba(0,0,0,.6);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .logo { display: flex; align-items: center; gap: 10px; font-family: 'Poppins'; font-weight: 800; font-size: 1.3rem; color: #fff; }
+    .logo-mark {
+      width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+      background: var(--gradient-primary); box-shadow: var(--shadow-glow); font-size: 1.1rem;
+    }
+    .logo span { color: var(--blue-400); }
+    .nav-links { display: flex; align-items: center; gap: 34px; }
+    .nav-links a { color: var(--text-on-dark); font-weight: 500; font-size: .98rem; position: relative; transition: color .2s; }
+    .nav-links a::after {
+      content: ''; position: absolute; left: 0; bottom: -6px; height: 2px; width: 0;
+      background: var(--blue-400); transition: width .25s ease;
+    }
+    .nav-links a:hover { color: #fff; }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta { display: flex; align-items: center; gap: 12px; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 8px; }
+    .hamburger span { width: 26px; height: 2.5px; background: #fff; border-radius: 2px; transition: transform .3s, opacity .3s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+    /* mobile drawer */
+    .mobile-menu {
+      position: fixed; inset: var(--nav-h) 0 auto 0; z-index: 999;
+      background: rgba(10,22,40,.97); backdrop-filter: blur(14px);
+      display: flex; flex-direction: column; gap: 6px; padding: 18px 22px 26px;
+      transform: translateY(-130%); transition: transform .35s ease; box-shadow: var(--shadow);
+    }
+    .mobile-menu.open { transform: translateY(0); }
+    .mobile-menu a { color: var(--text-on-dark); font-weight: 500; padding: 13px 6px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .mobile-menu .btn { margin-top: 14px; }
+
+    /* ============================================================
+       2. HERO
+       ============================================================ */
+    .hero {
+      position: relative; padding: calc(var(--nav-h) + 70px) 0 90px;
+      background: var(--gradient-hero); color: var(--text-on-dark); overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 26px 26px; opacity: .5; pointer-events: none;
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 50px; align-items: center; position: relative; z-index: 2; }
+    .hero h1 { font-size: clamp(2.4rem, 5.4vw, 4rem); font-weight: 800; color: #fff; letter-spacing: -.5px; }
+    .hero h1 .grad { background: linear-gradient(120deg,#60A5FA,#2563EB,#93C5FD); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p.lead { margin: 22px 0 30px; font-size: 1.18rem; color: var(--text-on-dark-muted); max-width: 540px; }
+    .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hero-stats { display: flex; gap: 34px; margin-top: 40px; flex-wrap: wrap; }
+    .hero-stats .stat strong { display: block; font-family: 'Poppins'; font-size: 1.7rem; color: #fff; }
+    .hero-stats .stat span { font-size: .85rem; color: var(--text-on-dark-muted); }
+
+    /* glowing TV / screen mockup (pure CSS) */
+    .hero-visual { position: relative; display: grid; place-items: center; }
+    .tv {
+      position: relative; width: 100%; max-width: 460px; aspect-ratio: 16/10;
+      border-radius: 20px; padding: 14px;
+      background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(10px);
+      box-shadow: 0 40px 90px -30px rgba(37,99,235,.8); animation: float 6s ease-in-out infinite;
+    }
+    .tv-screen {
+      width: 100%; height: 100%; border-radius: 12px; position: relative; overflow: hidden;
+      background: radial-gradient(120% 120% at 30% 20%, #1E3A8A, #0A1628 70%);
+    }
+    .tv-screen::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.14) 50%, transparent 60%);
+      animation: sheen 4.5s linear infinite;
+    }
+    .play-btn {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 78px; height: 78px; border-radius: 50%; display: grid; place-items: center;
+      background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(6px);
+      box-shadow: 0 0 0 0 rgba(96,165,250,.5); animation: pulse 2.4s ease-out infinite; cursor: pointer;
+    }
+    .play-btn::before { content: ''; border-style: solid; border-width: 13px 0 13px 22px; border-color: transparent transparent transparent #fff; margin-left: 5px; }
+    .float-card {
+      position: absolute; display: flex; align-items: center; gap: 9px;
+      background: rgba(12,31,58,.7); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(10px);
+      padding: 10px 14px; border-radius: 14px; font-size: .85rem; color: #fff; box-shadow: var(--shadow);
+      animation: float 5s ease-in-out infinite;
+    }
+    .float-card .dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 10px #34d399; }
+    .fc-1 { top: -18px; right: -10px; animation-delay: .4s; }
+    .fc-2 { bottom: 26px; left: -26px; animation-delay: 1.2s; }
+    .fc-3 { bottom: -16px; right: 28px; animation-delay: .8s; }
+
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+    @keyframes sheen { 0% { transform: translateX(-120%);} 60%,100% { transform: translateX(120%);} }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(96,165,250,.5);} 100% { box-shadow: 0 0 0 26px rgba(96,165,250,0);} }
+
+    /* marquee of channel emojis under hero */
+    .ticker { margin-top: 56px; border-top: 1px solid rgba(255,255,255,.08); border-bottom: 1px solid rgba(255,255,255,.08); overflow: hidden; }
+    .ticker-track { display: flex; gap: 48px; padding: 16px 0; width: max-content; animation: scrollX 26s linear infinite; }
+    .ticker-track span { color: var(--text-on-dark-muted); font-weight: 600; font-size: .95rem; white-space: nowrap; }
+    @keyframes scrollX { from { transform: translateX(0);} to { transform: translateX(-50%);} }
+
+    /* ============================================================
+       3. FEATURES (glass cards)
+       ============================================================ */
+    .features { padding: 100px 0; background: var(--bg-soft); }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .feature-card {
+      background: rgba(255,255,255,.7); border: 1px solid rgba(37,99,235,.12); border-radius: var(--radius);
+      padding: 32px 28px; backdrop-filter: blur(10px); transition: transform .3s ease, box-shadow .3s ease, border-color .3s;
+    }
+    .feature-card:hover { transform: translateY(-8px); box-shadow: var(--shadow); border-color: rgba(37,99,235,.4); }
+    .feature-ic {
+      width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; font-size: 1.7rem;
+      background: var(--gradient-primary); color: #fff; box-shadow: var(--shadow-glow); margin-bottom: 18px;
+    }
+    .feature-card h3 { font-size: 1.22rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { color: var(--text-muted); font-size: .98rem; }
+
+    /* ============================================================
+       4. HOW IT WORKS
+       ============================================================ */
+    .how { padding: 100px 0; background: #fff; }
+    .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 26px; position: relative; }
+    .step {
+      text-align: center; padding: 38px 26px; border-radius: var(--radius);
+      background: var(--bg-soft); border: 1px solid rgba(37,99,235,.1); transition: transform .3s, box-shadow .3s;
+    }
+    .step:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+    .step-num {
+      width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; display: grid; place-items: center;
+      font-family: 'Poppins'; font-weight: 800; font-size: 1.5rem; color: #fff; background: var(--gradient-primary);
+      box-shadow: var(--shadow-glow); position: relative;
+    }
+    .step-ic { font-size: 1.6rem; margin-bottom: 10px; }
+    .step h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .step p { color: var(--text-muted); font-size: .96rem; }
+
+    /* ============================================================
+       5. DEVICES
+       ============================================================ */
+    .devices { padding: 100px 0; background: var(--bg-soft); }
+    .device-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; }
+    .device {
+      display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 16px;
+      background: #fff; border-radius: var(--radius-sm); border: 1px solid rgba(37,99,235,.1);
+      transition: transform .3s, box-shadow .3s, border-color .3s; font-weight: 600; font-size: .95rem;
+    }
+    .device:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: rgba(37,99,235,.35); }
+    .device .emoji { font-size: 2.3rem; }
+
+    /* ============================================================
+       6. PRICING
+       ============================================================ */
+    .pricing { padding: 100px 0; background: #fff; }
+    .conn-select { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
+    .conn-chip {
+      padding: 9px 18px; border-radius: 999px; border: 1.5px solid rgba(37,99,235,.25); background: #fff;
+      color: var(--blue-800); font-weight: 600; cursor: pointer; transition: all .2s; font-size: .9rem;
+    }
+    .conn-chip.active, .conn-chip:hover { background: var(--gradient-primary); color: #fff; border-color: transparent; }
+    .conn-note { text-align: center; color: var(--text-muted); margin-top: -24px; margin-bottom: 36px; font-size: .92rem; }
+
+    .plans { display: grid; grid-template-columns: repeat(4,1fr); gap: 22px; align-items: stretch; }
+    .plan {
+      display: flex; flex-direction: column; background: #fff; border-radius: var(--radius);
+      border: 1px solid rgba(37,99,235,.14); padding: 30px 26px; position: relative; transition: transform .3s, box-shadow .3s;
+    }
+    .plan:hover { transform: translateY(-8px); box-shadow: var(--shadow); }
+    .plan.popular { border: 2px solid var(--blue-600); box-shadow: var(--shadow-glow); }
+    .plan-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: var(--gradient-primary); color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; padding: 6px 14px; border-radius: 999px; white-space: nowrap;
+    }
+    .plan-save { position: absolute; top: 18px; right: 18px; background: rgba(52,211,153,.15); color: #059669; font-weight: 700; font-size: .72rem; padding: 4px 10px; border-radius: 999px; }
+    .plan h3 { font-size: 1.05rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .plan .price { font-family: 'Poppins'; font-size: 2.6rem; font-weight: 800; color: var(--blue-800); }
+    .plan .price small { font-size: .95rem; font-weight: 600; color: var(--text-muted); }
+    .plan .per { color: var(--text-muted); font-size: .88rem; margin-bottom: 18px; }
+    .plan ul { display: flex; flex-direction: column; gap: 10px; margin: 18px 0 24px; }
+    .plan li { display: flex; gap: 9px; font-size: .92rem; color: #2b3a55; }
+    .plan li .ck { color: var(--blue-600); font-weight: 800; }
+    .plan .btn { margin-top: auto; width: 100%; }
+
+    /* ============================================================
+       7. CHANNELS PREVIEW
+       ============================================================ */
+    .channels { padding: 100px 0; background: var(--gradient-hero); color: var(--text-on-dark); }
+    .channels.on-dark { }
+    .count-row { display: flex; justify-content: center; gap: 50px; flex-wrap: wrap; margin-bottom: 50px; }
+    .count-box { text-align: center; }
+    .count-box strong { display: block; font-family: 'Poppins'; font-size: clamp(2.4rem,6vw,3.4rem); font-weight: 800; background: linear-gradient(120deg,#60A5FA,#93C5FD); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .count-box span { color: var(--text-on-dark-muted); font-weight: 500; }
+    .cat-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; max-width: 900px; margin: 0 auto; }
+    .cat {
+      display: flex; align-items: center; gap: 9px; padding: 13px 22px; border-radius: 999px;
+      background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+      font-weight: 600; color: #fff; transition: transform .25s, background .25s;
+    }
+    .cat:hover { transform: translateY(-4px) scale(1.04); background: rgba(37,99,235,.3); }
+
+    /* ============================================================
+       8. TESTIMONIALS
+       ============================================================ */
+    .testimonials { padding: 100px 0; background: var(--bg-soft); }
+    .tcarousel { position: relative; }
+    .ttrack {
+      display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 8px 4px 26px;
+      scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none;
+    }
+    .ttrack::-webkit-scrollbar { display: none; }
+    .tcard {
+      scroll-snap-align: start; flex: 0 0 340px; max-width: 340px;
+      background: #fff; border-radius: var(--radius); border: 1px solid rgba(37,99,235,.1);
+      padding: 26px; box-shadow: 0 10px 30px -18px rgba(10,22,40,.3);
+    }
+    .stars { color: #fbbf24; font-size: 1rem; margin-bottom: 12px; letter-spacing: 2px; }
+    .tcard p { color: #2b3a55; font-size: .96rem; margin-bottom: 18px; }
+    .treviewer { display: flex; align-items: center; gap: 12px; }
+    .tavatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--gradient-primary); }
+    .treviewer .tn { font-weight: 700; font-size: .95rem; }
+    .treviewer .tc { color: var(--text-muted); font-size: .82rem; }
+    .tnav { display: flex; justify-content: center; gap: 12px; margin-top: 26px; }
+    .tnav button {
+      width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(37,99,235,.25); background: #fff;
+      cursor: pointer; font-size: 1.2rem; color: var(--blue-800); transition: all .2s;
+    }
+    .tnav button:hover { background: var(--gradient-primary); color: #fff; border-color: transparent; }
+
+    /* ============================================================
+       9. FAQ
+       ============================================================ */
+    .faq { padding: 100px 0; background: #fff; }
+    .faq-list { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .faq-item { border: 1px solid rgba(37,99,235,.14); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-soft); transition: border-color .25s; }
+    .faq-item.open { border-color: var(--blue-600); }
+    .faq-q { width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 18px 22px; font-size: 1rem; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: 'Inter'; }
+    .faq-q .pm { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: rgba(37,99,235,.12); color: var(--blue-600); font-size: 1.2rem; transition: transform .3s, background .3s; }
+    .faq-item.open .pm { transform: rotate(45deg); background: var(--gradient-primary); color: #fff; }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+    .faq-a p { padding: 0 22px 20px; color: var(--text-muted); font-size: .95rem; }
+
+    /* ============================================================
+       10. PAYMENT
+       ============================================================ */
+    .payment { padding: 100px 0; background: var(--bg-soft); }
+    .pay-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; max-width: 960px; margin: 0 auto; }
+    .pay-card { background: #fff; border-radius: var(--radius); padding: 36px 32px; border: 1px solid rgba(37,99,235,.12); transition: transform .3s, box-shadow .3s; }
+    .pay-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+    .pay-card .badge { display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 6px 13px; border-radius: 999px; margin-bottom: 16px; }
+    .badge-instant { background: rgba(52,211,153,.15); color: #059669; }
+    .badge-manual { background: rgba(37,99,235,.12); color: var(--blue-600); }
+    .pay-card h3 { font-size: 1.4rem; margin-bottom: 8px; }
+    .pay-card p { color: var(--text-muted); margin-bottom: 20px; font-size: .96rem; }
+    .pay-methods { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pay-pill { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; background: var(--bg-soft); border: 1px solid rgba(37,99,235,.12); font-weight: 600; font-size: .9rem; }
+
+    /* ============================================================
+       11. FOOTER
+       ============================================================ */
+    .footer { background: var(--blue-950); color: var(--text-on-dark-muted); padding: 70px 0 30px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 46px; }
+    .footer .logo { margin-bottom: 16px; }
+    .footer p.about { max-width: 360px; font-size: .95rem; }
+    .footer h4 { color: #fff; font-size: 1rem; margin-bottom: 16px; font-family: 'Poppins'; }
+    .footer-links { display: flex; flex-direction: column; gap: 11px; }
+    .footer-links a { font-size: .93rem; transition: color .2s; }
+    .footer-links a:hover { color: var(--blue-400); }
+    .socials { display: flex; gap: 12px; margin-top: 18px; }
+    .socials a { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); font-size: 1.1rem; transition: all .25s; }
+    .socials a:hover { background: var(--gradient-primary); transform: translateY(-3px); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 24px; text-align: center; font-size: .88rem; }
+
+    /* ============================================================
+       SCROLL REVEAL ANIMATIONS
+       ============================================================ */
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal.d1 { transition-delay: .08s; } .reveal.d2 { transition-delay: .16s; }
+    .reveal.d3 { transition-delay: .24s; } .reveal.d4 { transition-delay: .32s; }
+    .reveal.d5 { transition-delay: .4s; } .reveal.d6 { transition-delay: .48s; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; text-align: center; }
+      .hero p.lead { margin-left: auto; margin-right: auto; }
+      .hero-ctas, .hero-stats { justify-content: center; }
+      .hero-visual { order: -1; margin-bottom: 10px; }
+      .features-grid { grid-template-columns: repeat(2,1fr); }
+      .steps { grid-template-columns: 1fr; }
+      .device-grid { grid-template-columns: repeat(3,1fr); }
+      .plans { grid-template-columns: repeat(2,1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .footer .about-col { grid-column: 1 / -1; }
+    }
+    @media (max-width: 640px) {
+      .nav-links, .nav-cta .btn { display: none; }
+      .hamburger { display: flex; }
+      .features-grid { grid-template-columns: 1fr; }
+      .device-grid { grid-template-columns: repeat(2,1fr); }
+      .plans { grid-template-columns: 1fr; }
+      .pay-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .count-row { gap: 28px; }
+      .hero-stats { gap: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ 1. NAVBAR ============ -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#home" class="logo"><span class="logo-mark">📺</span>IPTV<span>TOP</span></a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#channels">Channels</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-cta">
+        <a href="#pricing" class="btn btn-primary js-cta">Get Started</a>
+        <button class="hamburger" id="hamburger" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- mobile drawer -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features">Features</a>
+    <a href="#how">How it Works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#channels">Channels</a>
+    <a href="#faq">FAQ</a>
+    <a href="#pricing" class="btn btn-primary js-cta">Get Started</a>
+  </div>
+
+  <!-- ============ 2. HERO ============ -->
+  <section class="hero" id="home">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow on-dark reveal">⭐ Best IPTV Service 2026</span>
+          <h1 class="reveal d1">Watch Anything.<br><span class="grad">Anywhere. Anytime.</span></h1>
+          <p class="lead reveal d2">Stream 50,000+ live channels and 200,000+ movies & series in crystal-clear 4K, HD & SD — on every device, with instant activation and a free premium player on yearly plans.</p>
+          <div class="hero-ctas reveal d3">
+            <a href="#pricing" class="btn btn-primary btn-lg js-trial">▶ Start Free Trial</a>
+            <a href="#pricing" class="btn btn-ghost btn-lg">View Plans</a>
+          </div>
+          <div class="hero-stats reveal d4">
+            <div class="stat"><strong>50K+</strong><span>Live Channels</span></div>
+            <div class="stat"><strong>200K+</strong><span>Movies & Series</span></div>
+            <div class="stat"><strong>99.9%</strong><span>Uptime</span></div>
+            <div class="stat"><strong>24/7</strong><span>Support</span></div>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal d2">
+          <div class="tv">
+            <div class="tv-screen">
+              <div class="play-btn" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="float-card fc-1"><span class="dot"></span> 4K Ultra HD</div>
+          <div class="float-card fc-2">⚽ Live Sports &amp; PPV</div>
+          <div class="float-card fc-3">🎬 200K+ VOD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- scrolling ticker -->
+    <div class="ticker">
+      <div class="container">
+        <div class="ticker-track">
+          <span>⚽ Sports</span><span>🎬 Movies</span><span>📰 News</span><span>🧒 Kids</span>
+          <span>🌍 International</span><span>🎵 Music</span><span>🎭 Entertainment</span><span>📚 Documentary</span>
+          <span>🏆 PPV Events</span><span>🕌 Arabic</span><span>🇫🇷 French</span><span>📺 4K Premium</span>
+          <!-- duplicate for seamless loop -->
+          <span>⚽ Sports</span><span>🎬 Movies</span><span>📰 News</span><span>🧒 Kids</span>
+          <span>🌍 International</span><span>🎵 Music</span><span>🎭 Entertainment</span><span>📚 Documentary</span>
+          <span>🏆 PPV Events</span><span>🕌 Arabic</span><span>🇫🇷 French</span><span>📺 4K Premium</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. FEATURES ============ -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Why Choose Us</span>
+        <h2>Everything You Need to Stream</h2>
+        <p>A premium iptv service built for quality, reliability, and total device freedom.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal d1"><div class="feature-ic">📡</div><h3>50,000+ Live Channels</h3><p>Worldwide live TV across every category, streaming around the clock with daily updates.</p></div>
+        <div class="feature-card reveal d2"><div class="feature-ic">🎬</div><h3>HD &amp; 4K Quality</h3><p>Razor-sharp 4K Ultra HD, HD and SD streams that adapt smoothly to your connection.</p></div>
+        <div class="feature-card reveal d3"><div class="feature-ic">⚡</div><h3>99.9% Uptime</h3><p>Premium load-balanced servers keep your stream stable, even during peak sports events.</p></div>
+        <div class="feature-card reveal d1"><div class="feature-ic">📱</div><h3>All Devices Supported</h3><p>Smart TV, Firestick, Android, iOS, MAG, Enigma2, PC and any Xtream Codes / M3U player.</p></div>
+        <div class="feature-card reveal d2"><div class="feature-ic">🍿</div><h3>VOD Movies &amp; Series</h3><p>200,000+ on-demand titles with synced watchlists and favorites across all your devices.</p></div>
+        <div class="feature-card reveal d3"><div class="feature-ic">💬</div><h3>24/7 Support</h3><p>A real support team ready to help with setup, billing, or any question — day or night.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. HOW IT WORKS ============ -->
+  <section class="how" id="how">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Get Started in Minutes</span>
+        <h2>How It Works</h2>
+        <p>From sign-up to streaming in three simple steps.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal d1"><div class="step-num">1</div><div class="step-ic">🧾</div><h3>Choose Your Plan</h3><p>Pick the subscription length and number of connections that fit your household.</p></div>
+        <div class="step reveal d2"><div class="step-num">2</div><div class="step-ic">💳</div><h3>Complete Payment</h3><p>Pay instantly with crypto, or use card / PayPal verified quickly by our support team.</p></div>
+        <div class="step reveal d3"><div class="step-num">3</div><div class="step-ic">🚀</div><h3>Start Watching</h3><p>Receive your credentials on your dashboard and start streaming instantly on any device.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. DEVICES ============ -->
+  <section class="devices" id="devices">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Watch Your Way</span>
+        <h2>Works on All Your Devices</h2>
+        <p>One subscription, every screen. Stream on multiple devices at once.</p>
+      </div>
+      <div class="device-grid">
+        <div class="device reveal d1"><span class="emoji">📺</span>Smart TV</div>
+        <div class="device reveal d2"><span class="emoji">🤖</span>Android</div>
+        <div class="device reveal d3"><span class="emoji">📱</span>iPhone &amp; iPad</div>
+        <div class="device reveal d4"><span class="emoji">🔥</span>Firestick</div>
+        <div class="device reveal d1"><span class="emoji">📦</span>MAG Box</div>
+        <div class="device reveal d2"><span class="emoji">💻</span>PC / Laptop</div>
+        <div class="device reveal d3"><span class="emoji">🍎</span>Apple TV</div>
+        <div class="device reveal d4"><span class="emoji">🟣</span>Roku</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. PRICING ============ -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Simple Pricing</span>
+        <h2>Choose Your Plan</h2>
+        <p>Premium quality without the premium price. Cancel anytime, no hidden fees.</p>
+      </div>
+
+      <div class="conn-select reveal" id="connSelect">
+        <button class="conn-chip active">1 Connection</button>
+        <button class="conn-chip">2 Connections</button>
+        <button class="conn-chip">3 Connections</button>
+        <button class="conn-chip">4 Connections</button>
+        <button class="conn-chip">5 Connections</button>
+      </div>
+      <p class="conn-note reveal">Need more? Up to 10 connections available at checkout. Prices shown are for a single connection — final totals adjust on the secure members page.</p>
+
+      <div class="plans">
+        <div class="plan reveal d1">
+          <h3>1 Month</h3>
+          <div class="price">$12.99</div>
+          <div class="per">per month</div>
+          <ul>
+            <li><span class="ck">✓</span> 4K Ultra HD streaming</li>
+            <li><span class="ck">✓</span> 50,000+ live channels</li>
+            <li><span class="ck">✓</span> 200,000+ movies &amp; series</li>
+            <li><span class="ck">✓</span> All devices supported</li>
+            <li><span class="ck">✓</span> 24/7 premium support</li>
+            <li><span class="ck">✓</span> PPV &amp; sports events</li>
+          </ul>
+          <a href="#pricing" class="btn btn-ghost js-cta" style="background:rgba(37,99,235,.08);color:var(--blue-800);border-color:rgba(37,99,235,.25)">Get Started</a>
+        </div>
+
+        <div class="plan reveal d2">
+          <span class="plan-save">Save 20%</span>
+          <h3>3 Months</h3>
+          <div class="price">$22.99</div>
+          <div class="per">billed every 3 months</div>
+          <ul>
+            <li><span class="ck">✓</span> 4K Ultra HD streaming</li>
+            <li><span class="ck">✓</span> 50,000+ live channels</li>
+            <li><span class="ck">✓</span> 200,000+ movies &amp; series</li>
+            <li><span class="ck">✓</span> All devices supported</li>
+            <li><span class="ck">✓</span> 24/7 premium support</li>
+            <li><span class="ck">✓</span> PPV &amp; sports events</li>
+          </ul>
+          <a href="#pricing" class="btn btn-ghost js-cta" style="background:rgba(37,99,235,.08);color:var(--blue-800);border-color:rgba(37,99,235,.25)">Get Started</a>
+        </div>
+
+        <div class="plan popular reveal d3">
+          <span class="plan-badge">⭐ Most Popular</span>
+          <span class="plan-save">Save 40%</span>
+          <h3>6 Months</h3>
+          <div class="price">$38.99</div>
+          <div class="per">billed every 6 months</div>
+          <ul>
+            <li><span class="ck">✓</span> 4K Ultra HD streaming</li>
+            <li><span class="ck">✓</span> 50,000+ live channels</li>
+            <li><span class="ck">✓</span> 200,000+ movies &amp; series</li>
+            <li><span class="ck">✓</span> All devices supported</li>
+            <li><span class="ck">✓</span> 24/7 premium support</li>
+            <li><span class="ck">✓</span> PPV &amp; sports events</li>
+          </ul>
+          <a href="#pricing" class="btn btn-primary js-cta">Get Started</a>
+        </div>
+
+        <div class="plan reveal d4">
+          <span class="plan-badge">🎁 Free Premium Player</span>
+          <h3>12 Months</h3>
+          <div class="price">$57.99</div>
+          <div class="per">best value — billed yearly</div>
+          <ul>
+            <li><span class="ck">✓</span> Everything in 6 Months</li>
+            <li><span class="ck">✓</span> Free 1-Year IBO Player</li>
+            <li><span class="ck">✓</span> Priority activation</li>
+            <li><span class="ck">✓</span> Premium server stability</li>
+            <li><span class="ck">✓</span> MAG / Enigma / Xtream Codes</li>
+            <li><span class="ck">✓</span> Adult content (18+ optional)</li>
+          </ul>
+          <a href="#pricing" class="btn btn-primary js-cta">Get Started</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. CHANNELS PREVIEW ============ -->
+  <section class="channels on-dark" id="channels">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow on-dark">Endless Content</span>
+        <h2>A Channel for Every Mood</h2>
+        <p>From live sports to kids' shows, international TV to blockbuster movies — it's all here.</p>
+      </div>
+
+      <div class="count-row">
+        <div class="count-box reveal d1"><strong>50,000+</strong><span>Live TV Channels</span></div>
+        <div class="count-box reveal d2"><strong>200,000+</strong><span>Movies &amp; Series (VOD)</span></div>
+        <div class="count-box reveal d3"><strong>60+</strong><span>Countries Covered</span></div>
+      </div>
+
+      <div class="cat-grid reveal d2">
+        <span class="cat">⚽ Sports</span>
+        <span class="cat">🎬 Movies</span>
+        <span class="cat">📰 News</span>
+        <span class="cat">🧒 Kids</span>
+        <span class="cat">🕌 Arabic</span>
+        <span class="cat">🇫🇷 French</span>
+        <span class="cat">🎭 Entertainment</span>
+        <span class="cat">📚 Documentary</span>
+        <span class="cat">🎵 Music</span>
+        <span class="cat">🏆 PPV Events</span>
+        <span class="cat">🌍 International</span>
+        <span class="cat">📺 4K Premium</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8. TESTIMONIALS ============ -->
+  <section class="testimonials" id="reviews">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Loved by Thousands</span>
+        <h2>What Our Customers Say</h2>
+        <p>Real reviews from subscribers streaming with us every day.</p>
+      </div>
+
+      <div class="tcarousel reveal">
+        <div class="ttrack" id="ttrack"><!-- testimonial cards injected by JS --></div>
+        <div class="tnav">
+          <button id="tprev" aria-label="Previous reviews">‹</button>
+          <button id="tnext" aria-label="Next reviews">›</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 9. FAQ ============ -->
+  <section class="faq" id="faq">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Got Questions?</span>
+        <h2>Frequently Asked Questions</h2>
+        <p>Everything you need to know before getting started.</p>
+      </div>
+      <div class="faq-list reveal" id="faqList"><!-- FAQ items injected by JS --></div>
+    </div>
+  </section>
+
+  <!-- ============ 10. PAYMENT ============ -->
+  <section class="payment" id="payment">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Flexible &amp; Safe</span>
+        <h2>Simple &amp; Secure Checkout</h2>
+        <p>Pay the way you prefer. All payments are processed securely.</p>
+      </div>
+      <div class="pay-grid">
+        <div class="pay-card reveal d1">
+          <span class="badge badge-instant">⚡ Instant Activation</span>
+          <h3>Automatic — Crypto</h3>
+          <p>Pay with cryptocurrency and your subscription activates automatically the moment the payment is confirmed. No waiting.</p>
+          <div class="pay-methods">
+            <span class="pay-pill">₿ Bitcoin</span>
+            <span class="pay-pill">Ξ Ethereum</span>
+            <span class="pay-pill">₮ USDT</span>
+            <span class="pay-pill">🪙 100+ coins</span>
+          </div>
+        </div>
+        <div class="pay-card reveal d2">
+          <span class="badge badge-manual">🛡 Verified by Support</span>
+          <h3>Manual — Card &amp; PayPal</h3>
+          <p>Pay by card or PayPal through a secure payment link. Our team verifies it quickly and activates your account — usually within a short time.</p>
+          <div class="pay-methods">
+            <span class="pay-pill">💳 Visa</span>
+            <span class="pay-pill">💳 Mastercard</span>
+            <span class="pay-pill">🅿️ PayPal</span>
+            <span class="pay-pill">🏦 Bank Transfer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 11. FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="about-col">
+          <a href="#home" class="logo"><span class="logo-mark">📺</span>IPTV<span>TOP</span></a>
+          <p class="about">The future of streaming is here. Watch in stunning 4K, HD and SD with 50,000+ channels and 200,000+ on-demand titles. Premium iptv service for every device.</p>
+          <div class="socials">
+            <a href="#" aria-label="Facebook">f</a>
+            <a href="#" aria-label="Twitter / X">𝕏</a>
+            <a href="#" aria-label="Instagram">📷</a>
+            <a href="#" aria-label="Telegram">✈</a>
+          </div>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <div class="footer-links">
+            <a href="#home">Home</a>
+            <a href="#pricing">Plans</a>
+            <a href="#faq">FAQ</a>
+            <a href="#payment">Payments</a>
+          </div>
+        </div>
+        <div>
+          <h4>Company</h4>
+          <div class="footer-links">
+            <a href="#features">Features</a>
+            <a href="#channels">Channels</a>
+            <a href="#reviews">Reviews</a>
+            <a href="#pricing">Contact</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">© <span id="year"></span> IPTV TOP — Premium IPTV Service. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    /* ============================================================
+       CONFIG — replace with your live members/checkout URL
+       ============================================================ */
+    var MEMBERS_URL = "https://members.example.com/plans"; // <-- change to your members plans page
+    var TRIAL_URL   = "https://members.example.com/chat";  // <-- free-trial / support ticket page
+
+    document.querySelectorAll('.js-cta').forEach(function (el) { el.setAttribute('href', MEMBERS_URL); });
+    document.querySelectorAll('.js-trial').forEach(function (el) { el.setAttribute('href', TRIAL_URL); });
+
+    /* ============================================================
+       NAVBAR scroll state + mobile menu
+       ============================================================ */
+    var navbar = document.getElementById('navbar');
+    var hamburger = document.getElementById('hamburger');
+    var mobileMenu = document.getElementById('mobileMenu');
+
+    window.addEventListener('scroll', function () {
+      navbar.classList.toggle('scrolled', window.scrollY > 30);
+    });
+
+    hamburger.addEventListener('click', function () {
+      var open = hamburger.classList.toggle('open');
+      mobileMenu.classList.toggle('open', open);
+    });
+    // close drawer when a link is tapped
+    mobileMenu.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        hamburger.classList.remove('open');
+        mobileMenu.classList.remove('open');
+      });
+    });
+
+    /* ============================================================
+       SCROLL REVEAL with IntersectionObserver
+       ============================================================ */
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(function (el) { observer.observe(el); });
+
+    /* ============================================================
+       PRICING — connection chip selector (visual)
+       ============================================================ */
+    var connChips = document.querySelectorAll('#connSelect .conn-chip');
+    connChips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        connChips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+      });
+    });
+
+    /* ============================================================
+       TESTIMONIALS — 15 reviews + carousel controls
+       ============================================================ */
+    var reviews = [
+      { n: 'James W.', c: '🇺🇸 United States', t: 'Switched from cable and never looked back. The 4K streams are flawless and sports never buffer.' },
+      { n: 'Sophie L.', c: '🇫🇷 France', t: 'Setup took five minutes and support helped me on my Firestick instantly. Huge channel list!' },
+      { n: 'Mohammed A.', c: '🇦🇪 UAE', t: 'Best Arabic and international channels I have found. Activation was instant with crypto.' },
+      { n: 'Daniel K.', c: '🇩🇪 Germany', t: 'Rock solid uptime during the whole football season. Worth every cent.' },
+      { n: 'Emily R.', c: '🇬🇧 United Kingdom', t: 'The VOD library is massive — feels like every streaming app in one place.' },
+      { n: 'Carlos M.', c: '🇪🇸 Spain', t: 'Works perfectly on my Smart TV and phone at the same time. Great value.' },
+      { n: 'Aisha B.', c: '🇨🇦 Canada', t: 'Customer support is genuinely 24/7. They replied within minutes at 2am.' },
+      { n: 'Luca F.', c: '🇮🇹 Italy', t: 'Picture quality is unreal in 4K. The free player on the yearly plan sealed it for me.' },
+      { n: 'Nina P.', c: '🇳🇱 Netherlands', t: 'No freezing, no downtime. Finally an iptv service that just works.' },
+      { n: 'Omar S.', c: '🇸🇦 Saudi Arabia', t: 'Tons of channels and the kids section keeps my family happy. Highly recommend.' },
+      { n: 'Grace T.', c: '🇦🇺 Australia', t: 'Streaming from the other side of the world with zero lag. Impressed.' },
+      { n: 'Pierre D.', c: '🇧🇪 Belgium', t: 'Paid by card, got activated fast after verification. Smooth experience overall.' },
+      { n: 'Yuki H.', c: '🇯🇵 Japan', t: 'Great mix of international content and clean apps. Easy to navigate.' },
+      { n: 'Liam O.', c: '🇮🇪 Ireland', t: 'PPV events included is a game changer. Cancelled my other subscriptions.' },
+      { n: 'Fatima Z.', c: '🇲🇦 Morocco', t: 'Excellent quality and the price is unbeatable. Support speaks my language too.' }
+    ];
+
+    var ttrack = document.getElementById('ttrack');
+    reviews.forEach(function (r) {
+      var initials = r.n.split(' ').map(function (x) { return x[0]; }).join('').slice(0, 2);
+      var card = document.createElement('div');
+      card.className = 'tcard';
+      card.innerHTML =
+        '<div class="stars">★★★★★</div>' +
+        '<p>“' + r.t + '”</p>' +
+        '<div class="treviewer">' +
+          '<div class="tavatar">' + initials + '</div>' +
+          '<div><div class="tn">' + r.n + '</div><div class="tc">' + r.c + '</div></div>' +
+        '</div>';
+      ttrack.appendChild(card);
+    });
+
+    function scrollAmount() { var c = ttrack.querySelector('.tcard'); return c ? c.offsetWidth + 22 : 360; }
+    document.getElementById('tnext').addEventListener('click', function () { ttrack.scrollBy({ left: scrollAmount(), behavior: 'smooth' }); });
+    document.getElementById('tprev').addEventListener('click', function () { ttrack.scrollBy({ left: -scrollAmount(), behavior: 'smooth' }); });
+
+    /* ============================================================
+       FAQ — 20 questions accordion
+       ============================================================ */
+    var faqs = [
+      { q: 'What is IPTV and how does it work?', a: 'IPTV streams live TV and on-demand content over the internet instead of cable or satellite. You just need an internet connection and a compatible device or app.' },
+      { q: 'How fast is activation after I pay?', a: 'Crypto payments activate automatically and instantly. Card and PayPal are verified by our team and usually activated within a short time after payment.' },
+      { q: 'Which devices are supported?', a: 'Smart TVs, Android, iPhone/iPad, Apple TV, Amazon Firestick, Roku, KODI, MAG boxes, Enigma2, PC, and any device that supports Xtream Codes or M3U playlists.' },
+      { q: 'How many devices can I watch on at once?', a: 'It depends on the number of connections you choose at checkout — from 1 up to 10 simultaneous connections.' },
+      { q: 'Is there a free trial?', a: 'Yes, a free 24-hour trial is available so you can test the service before subscribing. Open a support ticket to request it.' },
+      { q: 'Do you offer 4K and HD streams?', a: 'Yes. We stream in 4K Ultra HD, HD and SD, automatically adapting to your internet speed for the smoothest experience.' },
+      { q: 'How many channels and VOD titles are there?', a: 'Over 50,000 live channels and more than 200,000 movies and series, with the library updated daily.' },
+      { q: 'What payment methods do you accept?', a: 'Cryptocurrency (instant), credit/debit card and PayPal (verified by support), and other methods like bank transfer on request.' },
+      { q: 'Is my payment secure?', a: 'Yes. Payments are processed through secure providers. Card and PayPal go through a protected payment link.' },
+      { q: 'The payment page shows a different company name — is that normal?', a: 'Yes, that is completely normal and safe. It is simply our payment processor. Go ahead and complete the payment and we will match it to your order.' },
+      { q: 'How do I receive my login credentials?', a: 'After activation, your credentials appear on your dashboard, and you also receive an email with the status.' },
+      { q: 'Can I use IPTV while traveling?', a: 'Yes, you can stream anywhere with an internet connection. A stable connection of 15+ Mbps is recommended for 4K.' },
+      { q: 'Do you include sports and PPV events?', a: 'Yes, major sports channels and Pay-Per-View events are included so you never miss the action.' },
+      { q: 'Is adult content included?', a: 'There is an optional adult (18+) section that you can choose to include or exclude at any time.' },
+      { q: 'What internet speed do I need?', a: 'About 10 Mbps for HD and 25 Mbps for smooth 4K streaming. A wired or strong Wi-Fi connection is best.' },
+      { q: 'Can I upgrade my plan or add connections later?', a: 'Yes, you can change your plan or add more connections at any time from the members area or by contacting support.' },
+      { q: 'What if a channel is not working?', a: 'Our team monitors streams 24/7. If you spot an issue, contact support and we will fix it quickly.' },
+      { q: 'Do you offer refunds?', a: 'Refund requests are handled case by case by our support team. Please open a support ticket to discuss your situation.' },
+      { q: 'Will it work on my old device?', a: 'As long as the device supports a compatible IPTV app (Xtream Codes or M3U), it will work. Support can recommend the best app for your device.' },
+      { q: 'How do I get help if I am stuck?', a: 'Our support team is available 24/7 via live chat and support tickets to help with setup, billing, or any question.' }
+    ];
+
+    var faqList = document.getElementById('faqList');
+    faqs.forEach(function (f) {
+      var item = document.createElement('div');
+      item.className = 'faq-item';
+      item.innerHTML =
+        '<button class="faq-q">' + f.q + '<span class="pm">+</span></button>' +
+        '<div class="faq-a"><p>' + f.a + '</p></div>';
+      faqList.appendChild(item);
+
+      var q = item.querySelector('.faq-q');
+      var a = item.querySelector('.faq-a');
+      q.addEventListener('click', function () {
+        var isOpen = item.classList.contains('open');
+        // close all (single-open accordion)
+        faqList.querySelectorAll('.faq-item').forEach(function (it) {
+          it.classList.remove('open');
+          it.querySelector('.faq-a').style.maxHeight = null;
+        });
+        if (!isOpen) {
+          item.classList.add('open');
+          a.style.maxHeight = a.scrollHeight + 'px';
+        }
+      });
+    });
+
+    /* ============ footer year ============ */
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
