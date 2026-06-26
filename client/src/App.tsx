@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import Login from "./pages/Login";
 import LandingHome from "./pages/LandingHome";
 import WorldCup from "./pages/WorldCup";
+import WorldCupHolding from "./pages/WorldCupHolding";
 import Dashboard from "./pages/Dashboard";
 import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
@@ -103,10 +104,11 @@ function Router() {
       </Route>
 
       {/* World Cup 2026 ad landing page (public).
-          Toggle WORLD_CUP_PAGE_ENABLED to true to re-activate once ads are approved.
-          While disabled, /world-cup quietly redirects to the homepage. */}
+          Set WORLD_CUP_PAGE_ENABLED to true to restore the full World Cup
+          landing page once ads are approved. While disabled, /world-cup shows
+          the AI content holding page (no redirect). */}
       <Route path="/world-cup">
-        {() => (WORLD_CUP_PAGE_ENABLED ? <WorldCup /> : <Redirect to="/" />)}
+        {() => (WORLD_CUP_PAGE_ENABLED ? <WorldCup /> : <WorldCupHolding />)}
       </Route>
 
       {/* Login / Sign up */}
