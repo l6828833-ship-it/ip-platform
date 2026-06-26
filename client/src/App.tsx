@@ -40,6 +40,10 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import Apps from "./pages/Apps";
 import Pay from "./pages/Pay";
 
+// Feature flag: the World Cup ad landing page (/world-cup).
+// Set to true to activate it once the ad campaign is approved.
+const WORLD_CUP_PAGE_ENABLED = false;
+
 // Protected route wrapper
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, loading, isAuthenticated } = useAuth();
@@ -98,9 +102,11 @@ function Router() {
         {() => <LandingHome />}
       </Route>
 
-      {/* World Cup 2026 ad landing page (public) */}
+      {/* World Cup 2026 ad landing page (public).
+          Toggle WORLD_CUP_PAGE_ENABLED to true to re-activate once ads are approved.
+          While disabled, /world-cup quietly redirects to the homepage. */}
       <Route path="/world-cup">
-        {() => <WorldCup />}
+        {() => (WORLD_CUP_PAGE_ENABLED ? <WorldCup /> : <Redirect to="/" />)}
       </Route>
 
       {/* Login / Sign up */}
