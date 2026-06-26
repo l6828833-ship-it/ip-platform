@@ -9,6 +9,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 // Pages
 import Login from "./pages/Login";
 import LandingHome from "./pages/LandingHome";
+import WorldCup from "./pages/WorldCup";
 import Dashboard from "./pages/Dashboard";
 import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
@@ -95,6 +96,11 @@ function Router() {
       {/* Root path - always show the public homepage immediately (no auth-loading spinner) */}
       <Route path="/">
         {() => <LandingHome />}
+      </Route>
+
+      {/* World Cup 2026 ad landing page (public) */}
+      <Route path="/world-cup">
+        {() => <WorldCup />}
       </Route>
 
       {/* Login / Sign up */}
