@@ -43,7 +43,7 @@ import Pay from "./pages/Pay";
 
 // Feature flag: the World Cup ad landing page (/world-cup).
 // Set to true to activate it once the ad campaign is approved.
-const WORLD_CUP_PAGE_ENABLED = false;
+const WORLD_CUP_PAGE_ENABLED = true;
 
 // Protected route wrapper
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
