@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import Login from "./pages/Login";
 import LandingHome from "./pages/LandingHome";
 import WorldCup from "./pages/WorldCup";
+import WorldCupHolding from "./pages/WorldCupHolding";
 import Dashboard from "./pages/Dashboard";
 import Plans from "./pages/Plans";
 import Checkout from "./pages/Checkout";
@@ -39,6 +40,10 @@ import AdminActivations from "./pages/admin/AdminActivations";
 import AdminMessages from "./pages/admin/AdminMessages";
 import Apps from "./pages/Apps";
 import Pay from "./pages/Pay";
+
+// Feature flag: the World Cup ad landing page (/world-cup).
+// Set to true to activate it once the ad campaign is approved.
+const WORLD_CUP_PAGE_ENABLED = false;
 
 // Protected route wrapper
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -98,9 +103,12 @@ function Router() {
         {() => <LandingHome />}
       </Route>
 
-      {/* World Cup 2026 ad landing page (public) */}
+      {/* World Cup 2026 ad landing page (public).
+          Set WORLD_CUP_PAGE_ENABLED to true to restore the full World Cup
+          landing page once ads are approved. While disabled, /world-cup shows
+          the AI content holding page (no redirect). */}
       <Route path="/world-cup">
-        {() => <WorldCup />}
+        {() => (WORLD_CUP_PAGE_ENABLED ? <WorldCup /> : <WorldCupHolding />)}
       </Route>
 
       {/* Login / Sign up */}
