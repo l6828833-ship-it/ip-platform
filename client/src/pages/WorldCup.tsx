@@ -12,11 +12,13 @@ import PublicAIChatWidget from "@/components/PublicAIChatWidget";
 const LOGO_URL = "https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png";
 
 /* World Cup 2026 ad landing page (public). Reuses the homepage info with a
-   World Cup–focused hero, a modern dark theme, a live countdown and lots of
-   CTAs. Served at "/world-cup" for paid traffic. */
+   World Cup–focused hero, a modern dark theme, a limited-offer urgency timer
+   and lots of CTAs. Served at "/world-cup" for paid traffic. */
 
-// FIFA World Cup 2026 final — used for the live countdown / urgency.
-const FINAL_DATE = new Date("2026-07-19T18:00:00Z").getTime();
+// Limited-offer urgency: an evergreen 13-hour countdown, persisted per visitor
+// in localStorage so it keeps counting down and resets when it reaches zero.
+const PROMO_DURATION_MS = 13 * 60 * 60 * 1000;
+const PROMO_STORAGE_KEY = "wc_promo_deadline";
 
 const FEATURES = [
   { ic: "⚽", t: "Every World Cup Match Live", d: "All 104 games in 4K & HD — group stage to the final, plus pre-game and highlights, with zero blackouts." },
@@ -77,7 +79,7 @@ export default function WorldCup() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selectedConnections, setSelectedConnections] = useState<Record<number, number>>({});
   const [expandedPlans, setExpandedPlans] = useState<Record<number, boolean>>({});
-  const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0, live: false });
+  const [countdown, setCountdown] = useState({ h: 0, m: 0, s: 0 });
   const tTrack = useRef<HTMLDivElement>(null);
 
   const FEATURES_PREVIEW_COUNT = 6;
@@ -92,19 +94,24 @@ export default function WorldCup() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Live countdown to the World Cup final
+  // Limited-offer "Hurry" countdown (evergreen 13-hour timer)
   useEffect(() => {
+    let deadline = parseInt(localStorage.getItem(PROMO_STORAGE_KEY) || "0", 10);
+    if (!deadline || deadline < Date.now()) {
+      deadline = Date.now() + PROMO_DURATION_MS;
+      localStorage.setItem(PROMO_STORAGE_KEY, String(deadline));
+    }
     const tick = () => {
-      const diff = FINAL_DATE - Date.now();
+      let diff = deadline - Date.now();
       if (diff <= 0) {
-        setCountdown({ d: 0, h: 0, m: 0, s: 0, live: true });
-        return;
+        deadline = Date.now() + PROMO_DURATION_MS;
+        localStorage.setItem(PROMO_STORAGE_KEY, String(deadline));
+        diff = PROMO_DURATION_MS;
       }
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
+      const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
-      setCountdown({ d, h, m, s, live: false });
+      setCountdown({ h, m, s });
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -199,30 +206,32 @@ export default function WorldCup() {
         </div>
         <div className="container hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow reveal">⚽ FIFA World Cup 2026 · Free 24-Hour Trial</span>
+            <span className="eyebrow reveal">🎁 Limited World Cup Offer · Free Premium Player + 24h Trial</span>
             <h1 className="reveal d1">The Best IPTV Service<br /><span className="grad">to Watch the World Cup 2026</span></h1>
-            <p className="lead reveal d2">Stream every World Cup 2026 match live in 4K — no blackouts, no buffering, no cable contract. IPTV TOP gives you 50,000+ live channels and 200,000+ movies and series on any device. Try it free for 24 hours.</p>
+            <p className="lead reveal d2">Stream every World Cup 2026 match live in 4K — no blackouts, no buffering, no cable contract. Get 50,000+ live channels, 200,000+ movies and series, and a <strong>premium player FREE</strong> with your plan. Try it free for 24 hours.</p>
 
-            {/* Countdown */}
-            <div className="countdown reveal d2" aria-label="Countdown to the World Cup final">
-              {countdown.live ? (
-                <div className="cd-live"><span className="cd-dot" /> The World Cup is LIVE right now</div>
-              ) : (
-                <>
-                  <span className="cd-label">⏱ Final kicks off in</span>
-                  <div className="cd-row">
-                    <div className="cd-box"><strong>{countdown.d}</strong><span>days</span></div>
-                    <div className="cd-box"><strong>{String(countdown.h).padStart(2, "0")}</strong><span>hrs</span></div>
-                    <div className="cd-box"><strong>{String(countdown.m).padStart(2, "0")}</strong><span>min</span></div>
-                    <div className="cd-box"><strong>{String(countdown.s).padStart(2, "0")}</strong><span>sec</span></div>
-                  </div>
-                </>
-              )}
+            {/* PROMO OFFER + HURRY TIMER */}
+            <div className="promo-box reveal d2">
+              <div className="promo-main">
+                <span className="promo-gift">🎁</span>
+                <div>
+                  <div className="promo-title">FREE Premium Player — worth $12</div>
+                  <div className="promo-sub">Activate any premium IPTV app for free using the points included with your plan.</div>
+                </div>
+              </div>
+              <div className="hurry">
+                <span className="hurry-label">🔥 Hurry! Offer ends in</span>
+                <div className="hurry-clock">
+                  <span>{String(countdown.h).padStart(2, "0")}</span>:
+                  <span>{String(countdown.m).padStart(2, "0")}</span>:
+                  <span>{String(countdown.s).padStart(2, "0")}</span>
+                </div>
+              </div>
             </div>
 
             <div className="hero-ctas reveal d3">
-              <Link href={primaryHref} className="btn btn-primary btn-lg">▶ Start Free Trial</Link>
-              <a href="#pricing" className="btn btn-gold btn-lg">⚽ See World Cup Plans</a>
+              <Link href={primaryHref} className="btn btn-gold btn-lg">🎁 Claim Free Player + Trial</Link>
+              <a href="#pricing" className="btn btn-outline-light btn-lg">⚽ See World Cup Plans</a>
             </div>
             <p className="hero-note reveal d3">No credit card needed for the trial · Cancel anytime · Activates in minutes</p>
 
@@ -235,11 +244,11 @@ export default function WorldCup() {
           </div>
           <div className="hero-visual reveal d2">
             <div className="tv">
-              <div className="tv-screen"><div className="play-btn" /></div>
+              <div className="tv-screen"><div className="ball" aria-hidden="true">⚽</div></div>
             </div>
-            <div className="float-card fc-1"><span className="dot" /> 4K · No Blackouts</div>
+            <div className="float-card fc-1"><span className="dot" /> 🎁 Free Premium Player</div>
             <div className="float-card fc-2">⚽ All 104 Matches</div>
-            <div className="float-card fc-3">🏆 Group Stage → Final</div>
+            <div className="float-card fc-3">🏆 4K · No Blackouts</div>
           </div>
         </div>
       </section>
@@ -651,10 +660,10 @@ export default function WorldCup() {
       {/* STICKY CONVERSION BAR (great for ad traffic) */}
       <div className={`sticky-cta ${scrolled ? "show" : ""}`}>
         <div className="sticky-cta-text">
-          <strong>⚽ Watch the World Cup 2026 in 4K</strong>
-          <span>Free 24-hour trial · Activates in minutes</span>
+          <strong>🎁 Free Premium Player + World Cup in 4K</strong>
+          <span>Offer ends in {String(countdown.h).padStart(2, "0")}:{String(countdown.m).padStart(2, "0")}:{String(countdown.s).padStart(2, "0")} · Free 24h trial</span>
         </div>
-        <Link href={primaryHref} className="btn btn-gold">Start Free Trial</Link>
+        <Link href={primaryHref} className="btn btn-gold">Claim Offer</Link>
       </div>
 
       {/* Public Live Agent */}
@@ -740,16 +749,28 @@ const css = `
 .wc .hero-stats .stat strong { display:block; font-family:'Poppins'; font-size:1.7rem; color:#fff; }
 .wc .hero-stats .stat span { font-size:.85rem; color:#8ea3c9; }
 
-/* Countdown */
-.wc .countdown { margin:6px 0 4px; }
-.wc .cd-label { display:block; font-size:.82rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--gold-2); margin-bottom:10px; }
-.wc .cd-row { display:flex; gap:10px; flex-wrap:wrap; }
-.wc .cd-box { min-width:64px; text-align:center; padding:10px 12px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(6px); }
-.wc .cd-box strong { display:block; font-family:'Poppins'; font-size:1.6rem; font-weight:800; color:#fff; line-height:1; }
-.wc .cd-box span { font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:#8ea3c9; }
-.wc .cd-live { display:inline-flex; align-items:center; gap:10px; font-weight:700; color:#fff; background:rgba(16,185,129,.16); border:1px solid rgba(16,185,129,.4); padding:10px 16px; border-radius:999px; }
-.wc .cd-dot { width:10px; height:10px; border-radius:50%; background:var(--emerald); box-shadow:0 0 10px var(--emerald); animation:wcpulsedot 1.4s ease-out infinite; }
-@keyframes wcpulsedot { 0%{box-shadow:0 0 0 0 rgba(16,185,129,.6);} 100%{box-shadow:0 0 0 12px rgba(16,185,129,0);} }
+/* Limited offer promo + hurry timer */
+.wc .promo-box { margin:6px 0 6px; padding:16px 18px; border-radius:16px; background:rgba(255,255,255,.06); border:1px solid rgba(245,179,1,.4); backdrop-filter:blur(6px); display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; box-shadow:0 14px 40px -18px rgba(245,179,1,.5); }
+.wc .promo-main { display:flex; align-items:center; gap:12px; text-align:left; }
+.wc .promo-gift { font-size:1.9rem; line-height:1; animation:wcgift 2.2s ease-in-out infinite; }
+@keyframes wcgift { 0%,100%{transform:rotate(0) scale(1);} 25%{transform:rotate(-8deg) scale(1.06);} 75%{transform:rotate(8deg) scale(1.06);} }
+.wc .promo-title { font-family:'Poppins'; font-weight:800; font-size:1.02rem; color:#fff; }
+.wc .promo-sub { font-size:.85rem; color:#b9c8e6; max-width:340px; }
+.wc .hurry { text-align:center; }
+.wc .hurry-label { display:block; font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gold-2); margin-bottom:6px; }
+.wc .hurry-clock { display:inline-flex; gap:4px; align-items:center; font-family:'Poppins'; font-weight:800; font-size:1.5rem; color:#fff; }
+.wc .hurry-clock span { background:rgba(245,179,1,.16); border:1px solid rgba(245,179,1,.45); border-radius:8px; padding:4px 8px; min-width:42px; text-align:center; }
+
+.wc .btn-outline-light { background:rgba(255,255,255,.08); color:#fff; border:1.5px solid rgba(255,255,255,.5); }
+.wc .btn-outline-light:hover { transform:translateY(-3px); background:rgba(255,255,255,.16); }
+
+/* Animated soccer ball in the hero TV */
+.wc .ball { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:3.4rem; line-height:1; filter:drop-shadow(0 8px 18px rgba(0,0,0,.45)); animation:wcball 3.2s ease-in-out infinite; }
+@keyframes wcball { 0%,100%{transform:translate(-50%,-50%) translateY(0) rotate(-12deg);} 50%{transform:translate(-50%,-50%) translateY(-14px) rotate(12deg);} }
+
+/* Keep the chat live-agent button clear of the sticky bar */
+.wc > button { bottom:5.75rem; }
+.wc > div.bottom-24 { bottom:8.75rem; }
 
 .wc .hero-visual { position:relative; display:grid; place-items:center; }
 .wc .tv { position:relative; width:100%; max-width:460px; aspect-ratio:16/10; border-radius:20px; padding:14px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.16); box-shadow:0 40px 90px -30px rgba(0,0,0,.7); animation:wcfloat 6s ease-in-out infinite; }
@@ -868,8 +889,9 @@ const css = `
 @media (max-width:980px){
   .wc .hero-grid{grid-template-columns:1fr; text-align:center;}
   .wc .hero p.lead{margin-left:auto; margin-right:auto;}
-  .wc .hero-ctas,.wc .hero-stats,.wc .countdown .cd-row{justify-content:center;}
-  .wc .countdown{display:flex; flex-direction:column; align-items:center;}
+  .wc .hero-ctas,.wc .hero-stats{justify-content:center;}
+  .wc .promo-box{justify-content:center; text-align:center;}
+  .wc .promo-main{flex-direction:column; text-align:center;}
   .wc .hero-visual{order:-1; margin-bottom:10px;}
   .wc .features-grid{grid-template-columns:repeat(2,1fr);}
   .wc .steps{grid-template-columns:1fr;}
