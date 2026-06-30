@@ -38,7 +38,6 @@ import {
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import AIChatWidget from "@/components/AIChatWidget";
 
 const userMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -281,9 +280,6 @@ function UserLayoutContent({ children, setSidebarWidth }: UserLayoutContentProps
         )}
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
-
-      {/* AI Chat popup widget (only shows when admin enabled the assistant) */}
-      <AIChatWidget />
     </>
   );
 }
