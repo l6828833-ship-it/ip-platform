@@ -5,6 +5,7 @@ import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
+import CustomCodeInjector from "./components/CustomCodeInjector";
 
 // Pages
 import Login from "./pages/Login";
@@ -35,6 +36,7 @@ import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 import AdminCredentials from "./pages/admin/AdminCredentials";
 import AdminEmailSettings from "./pages/admin/AdminEmailSettings";
 import AdminAISettings from "./pages/admin/AdminAISettings";
+import AdminCustomCode from "./pages/admin/AdminCustomCode";
 import AdminApps from "./pages/admin/AdminApps";
 import AdminActivations from "./pages/admin/AdminActivations";
 import AdminMessages from "./pages/admin/AdminMessages";
@@ -204,6 +206,9 @@ function Router() {
       <Route path="/admin/ai-settings">
         {() => <AdminRoute component={AdminAISettings} />}
       </Route>
+      <Route path="/admin/custom-code">
+        {() => <AdminRoute component={AdminCustomCode} />}
+      </Route>
       
       {/* 404 */}
       <Route path="/404" component={NotFound} />
@@ -218,6 +223,7 @@ function App() {
       <ThemeProvider defaultTheme="light" switchable>
         <TooltipProvider>
           <Toaster richColors position="top-right" />
+          <CustomCodeInjector />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

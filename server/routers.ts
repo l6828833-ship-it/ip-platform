@@ -1151,6 +1151,21 @@ export const appRouter = router({
     list: adminProcedure.query(async () => {
       return db.getAllSettings();
     }),
+
+    // Public: custom HTML the admin wants injected into the page <head> and
+    // <body> on every page (e.g. analytics, tracking pixels, verification
+    // tags, chat scripts). Readable by anyone so it applies to logged-out
+    // visitors too.
+    publicCustomCode: publicProcedure.query(async () => {
+      const [head, body] = await Promise.all([
+        db.getSetting("custom_head_html"),
+        db.getSetting("custom_body_html"),
+      ]);
+      return {
+        headHtml: head?.value ?? "",
+        bodyHtml: body?.value ?? "",
+      };
+    }),
     
     get: adminProcedure
       .input(z.object({ key: z.string() }))

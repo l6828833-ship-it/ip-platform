@@ -44,7 +44,8 @@ import {
   AppWindow,
   Zap,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Code2
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -66,6 +67,7 @@ const adminMenuItems = [
   { icon: FileText, label: "Activity Logs", path: "/admin/logs" },
   { icon: Mail, label: "Email Templates", path: "/admin/email-templates" },
   { icon: Settings, label: "Email Settings", path: "/admin/email-settings" },
+  { icon: Code2, label: "Custom Code", path: "/admin/custom-code" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "admin-sidebar-width";

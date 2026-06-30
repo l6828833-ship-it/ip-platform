@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Check, Users, Coins, ChevronDown, ChevronUp } from "lucide-react";
-import PublicAIChatWidget from "@/components/PublicAIChatWidget";
 
 const LOGO_URL = "https://pub-5b34ab7e74be4b678343a2ff1c41d64c.r2.dev/iptvtop%20live%20logo.png";
 
@@ -665,9 +664,6 @@ export default function WorldCup() {
         </div>
         <Link href={primaryHref} className="btn btn-gold">Claim Offer</Link>
       </div>
-
-      {/* Public Live Agent */}
-      <PublicAIChatWidget />
     </div>
   );
 }
